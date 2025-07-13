@@ -1,0 +1,45 @@
+{
+  "id": "texas_civil_practice_remedies_code_2025",
+  "title": "Texas Civil Practice and Remedies Code",
+  "citation": "Tex. Civ. Prac. & Rem. Code",
+  "author": "Texas Legislature",
+  "publication_date": 1704067200,
+  "effective_date": 1704067200,
+  "source_url": "https://statutes.capitol.texas.gov/docs/sdocs/civilpracticeandremediescode.pdf",
+  "authority_score": 0.98,
+  "relevance_score": 0.95,
+  "citation_count": 500,
+  "summary": "Complete Texas Civil Practice and Remedies Code covering civil procedure, tort liability, damages, and legal remedies in Texas state courts",
+  "legal_topics": [
+    "civil_procedure",
+    "tort_liability", 
+    "damages",
+    "personal_injury",
+    "medical_malpractice",
+    "statute_of_limitations",
+    "venue",
+    "discovery",
+    "judgments"
+  ],
+  "keywords": [
+    "texas_civil_code",
+    "civil_procedure", 
+    "tort_liability",
+    "damages",
+    "personal_injury",
+    "medical_malpractice",
+    "statute_limitations",
+    "venue_rules",
+    "discovery_rules"
+  ],
+  "word_count_estimate": 200000,
+  "page_count": 794,
+  "chapters_covered": [
+    "General Provisions",
+    "Trial Matters", 
+    "Remedies",
+    "Liability",
+    "Damages",
+    "Limitations"
+  ]
+}

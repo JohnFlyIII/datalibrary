@@ -1,0 +1,15 @@
+{
+  "practice_area": "civil_law",
+  "jurisdiction": "texas",
+  "authority_level": "primary",
+  "document_type": "statute",
+  "source_type": "government_publication",
+  "publisher": "Texas Legislature",
+  "source_attribution": "Texas State Capitol",
+  "collection_date": "2025-01-15",
+  "authority_score": 0.95,
+  "relevance_score": 0.90,
+  "citation_count": 0,
+  "legal_topics": ["civil_procedure", "remedies", "tort_law", "contract_law"],
+  "keywords": ["civil_procedure", "texas_law", "remedies", "damages", "liability"]
+}

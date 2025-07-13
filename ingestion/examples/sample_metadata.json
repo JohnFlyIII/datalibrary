@@ -1,0 +1,20 @@
+{
+  "practice_area": "personal_injury",
+  "jurisdiction": "california",
+  "authority_level": "primary",
+  "document_type": "case_law",
+  "source_type": "court_records",
+  "injury_type": "medical_malpractice",
+  "injury_severity": "severe",
+  "liability_theory": "negligence",
+  "medical_specialty": "surgery",
+  "medical_treatment": "long_term",
+  "medical_records_complexity": "expert_needed",
+  "expert_witnesses_needed": ["medical_expert", "economic_expert"],
+  "trial_readiness": "complex_litigation",
+  "collection_date": "2025-01-15",
+  "source_attribution": "Superior Court of Los Angeles",
+  "authority_score": 0.9,
+  "relevance_score": 0.85,
+  "citation_count": 25
+}
