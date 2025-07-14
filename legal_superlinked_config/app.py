@@ -387,6 +387,27 @@ executor = sl.RestExecutor(
 # Register the executor
 sl.SuperlinkedRegistry.register(executor)
 
+# Configure CORS for the FastAPI app after registering
+try:
+    from fastapi.middleware.cors import CORSMiddleware
+    import sys
+    
+    # Get the current app instance if it exists
+    app_instance = getattr(sl.SuperlinkedRegistry, '_app', None)
+    if app_instance and hasattr(app_instance, 'add_middleware'):
+        app_instance.add_middleware(
+            CORSMiddleware,
+            allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        print("✅ CORS middleware added to Superlinked app")
+    else:
+        print("⚠️ Could not add CORS middleware - app instance not accessible")
+except Exception as e:
+    print(f"⚠️ CORS configuration failed: {e}")
+
 print("🏛️ Legal Knowledge System Superlinked Configuration Loaded!")
 print(f"Available Queries: legal_research_query, practice_area_query, authority_query, medical_malpractice_query, recent_developments_query")
 print(f"Vector Database: {os.getenv('QDRANT_URL', 'In-Memory (Development)')}")

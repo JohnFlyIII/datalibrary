@@ -48,7 +48,7 @@ class LegalKnowledgeAPI:
         """Ingest a legal document into a specific source"""
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{self.superlinked_url}/ingest/{source_name}",
+                f"{self.superlinked_url}/api/v1/ingest/{source_name}",
                 json=document,
                 headers={"Content-Type": "application/json"}
             ) as response:
@@ -62,7 +62,7 @@ class LegalKnowledgeAPI:
     
     async def search_documents(self, 
                              query: str,
-                             query_type: str = "legal_research_query",
+                             query_type: str = "legal_research",
                              **params) -> Dict[str, Any]:
         """Search legal documents"""
         query_params = {
@@ -73,7 +73,7 @@ class LegalKnowledgeAPI:
         
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{self.superlinked_url}/query/{query_type}",
+                f"{self.superlinked_url}/api/v1/search/{query_type}",
                 json=query_params,
                 headers={"Content-Type": "application/json"}
             ) as response:
@@ -153,10 +153,10 @@ async def ingest_legal_document(document: Dict[str, Any]):
         
         # Determine appropriate source based on practice area and document type
         practice_area = document["practice_area"]
-        source_endpoint = "legal_document_source"  # default
+        source_endpoint = "legal_document"  # default
         
         if practice_area == "personal_injury" or document.get("injury_type"):
-            source_endpoint = "personal_injury_source"
+            source_endpoint = "personal_injury_document"
             # Set personal injury specific defaults
             document.setdefault("injury_type", "general")
             document.setdefault("injury_severity", "moderate")
@@ -165,7 +165,7 @@ async def ingest_legal_document(document: Dict[str, Any]):
             document.setdefault("trial_readiness", "settlement_track")
             
         elif practice_area == "immigration_law" or document.get("visa_category"):
-            source_endpoint = "immigration_source"
+            source_endpoint = "legal_document"  # No immigration schema in current config
             # Set immigration specific defaults
             document.setdefault("benefit_type", "visa")
             document.setdefault("responsible_agency", "USCIS")
@@ -223,7 +223,7 @@ async def ingest_personal_injury_document(document: Dict[str, Any]):
         document.setdefault("pdf_path", "")
         document.setdefault("word_count", len(document["content_text"].split()))
         
-        result = await legal_api.ingest_document_to_source(document, "personal_injury_source")
+        result = await legal_api.ingest_document_to_source(document, "personal_injury_document")
         
         return {
             "status": "success", 
@@ -290,7 +290,7 @@ async def ingest_immigration_document(document: Dict[str, Any]):
 @app.post("/api/v1/search/legal")
 async def search_legal_documents(
     query: str,
-    query_type: str = "legal_research_query",
+    query_type: str = "legal_research",
     limit: int = 20,
     content_weight: float = 1.0,
     title_weight: float = 0.6,
@@ -304,11 +304,11 @@ async def search_legal_documents(
     Search legal documents with configurable weights
     
     Query types:
-    - legal_research_query: Comprehensive legal research
-    - practice_area_query: Quick practice area search
-    - authority_query: Authority-weighted search
+    - legal_research: Comprehensive legal research
+    - practice_area: Quick practice area search
+    - authority: Authority-weighted search
     - content_gap_query: Content opportunity analysis
-    - recent_developments_query: Recent legal updates
+    - recent_developments: Recent legal updates
     """
     try:
         params = {
@@ -341,7 +341,7 @@ async def search_authoritative_sources(
     try:
         result = await legal_api.search_documents(
             query=query,
-            query_type="authority_query",
+            query_type="authority",
             authority_weight=1.5,
             citation_weight=1.2,
             content_weight=0.8,
@@ -374,7 +374,7 @@ async def search_recent_developments(
     try:
         result = await legal_api.search_documents(
             query=query,
-            query_type="recent_developments_query",
+            query_type="recent_developments",
             recency_weight=1.5,
             content_weight=0.8,
             authority_weight=0.7,
@@ -486,7 +486,7 @@ async def search_medical_malpractice_cases(
         
         result = await legal_api.search_documents(
             enhanced_query, 
-            "medical_malpractice_query", 
+            "medical_malpractice", 
             **params
         )
         
@@ -617,15 +617,15 @@ async def system_info():
         ],
         "available_query_types": {
             "general_legal": [
-                "legal_research_query",
-                "practice_area_query", 
-                "authority_query",
+                "legal_research",
+                "practice_area", 
+                "authority",
                 "content_gap_query",
-                "recent_developments_query"
+                "recent_developments"
             ],
             "personal_injury": [
                 "personal_injury_research_query",
-                "medical_malpractice_query",
+                "medical_malpractice",
                 "case_similarity_query"
             ],
             "immigration": [

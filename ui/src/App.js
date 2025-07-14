@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './index.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Use environment variable for API URL (Docker containers) or empty string for proxy (development)
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,7 +14,7 @@ function App() {
   const [systemInfo, setSystemInfo] = useState(null);
   
   // Search parameters
-  const [queryType, setQueryType] = useState('legal_research_query');
+  const [queryType, setQueryType] = useState('legal_research');
   const [limit, setLimit] = useState(20);
   const [authorityWeight, setAuthorityWeight] = useState(0.9);
   const [recencyWeight, setRecencyWeight] = useState(0.4);
@@ -24,17 +25,11 @@ function App() {
   }, []);
 
   const loadSystemInfo = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/v1/system/info`);
-      setSystemInfo(response.data);
-    } catch (err) {
-      console.error('Failed to load system info:', err);
-      // Set default system info if API call fails
-      setSystemInfo({
-        available_practice_areas: ['personal_injury', 'medical_malpractice', 'civil_law'],
-        available_query_types: ['legal_research_query', 'practice_area_query', 'authority_query']
-      });
-    }
+    // Set system info directly since we know what Superlinked supports
+    setSystemInfo({
+      available_practice_areas: ['personal_injury', 'medical_malpractice', 'civil_law'],
+      available_query_types: ['legal_research', 'practice_area', 'authority', 'medical_malpractice', 'recent_developments']
+    });
   };
 
   const handleSearch = async (e) => {
@@ -45,33 +40,40 @@ function App() {
     setError(null);
 
     try {
-      let endpoint = '/api/v1/search/legal';
-      let params = {
-        query: searchQuery,
-        query_type: queryType,
-        limit: limit,
-        authority_weight: authorityWeight,
-        recency_weight: recencyWeight
+      let endpoint = `/api/v1/search/${queryType}`;
+      let payload = {
+        search_query: searchQuery,
+        limit: limit
       };
 
       if (activeTab === 'authority') {
         endpoint = '/api/v1/search/authority';
-        params = {
-          query: searchQuery,
-          min_authority_score: 0.8,
+        payload = {
+          search_query: searchQuery,
+          authority_weight: 1.5,
+          citation_weight: 1.2,
           limit: limit
         };
       } else if (activeTab === 'recent') {
-        endpoint = '/api/v1/search/recent';
-        params = {
-          query: searchQuery,
-          days_back: 90,
+        endpoint = '/api/v1/search/recent_developments';
+        payload = {
+          search_query: searchQuery,
+          recency_weight: 1.5,
           limit: limit
         };
+      } else {
+        // Add weights for research tab
+        payload.content_weight = 1.0;
+        payload.title_weight = 0.6;
+        payload.summary_weight = 0.7;
+        payload.practice_area_weight = 0.8;
+        payload.authority_weight = authorityWeight;
+        payload.recency_weight = recencyWeight;
+        payload.citation_weight = 0.3;
       }
 
-      const response = await axios.post(`${API_BASE_URL}${endpoint}`, null, {
-        params: params
+      const response = await axios.post(`${API_BASE_URL}${endpoint}`, payload, {
+        headers: { 'Content-Type': 'application/json' }
       });
 
       setSearchResults(response.data);
@@ -145,9 +147,9 @@ function App() {
             <div className="option-group">
               <label>Query Type:</label>
               <select value={queryType} onChange={(e) => setQueryType(e.target.value)}>
-                <option value="legal_research_query">Comprehensive Research</option>
-                <option value="practice_area_query">Practice Area Search</option>
-                <option value="content_gap_query">Content Gap Analysis</option>
+                <option value="legal_research">Comprehensive Research</option>
+                <option value="practice_area">Practice Area Search</option>
+                <option value="legal_research">Content Gap Analysis</option>
               </select>
             </div>
             <div className="option-group">
@@ -195,81 +197,70 @@ function App() {
           <div className="results-header">
             <h2>Search Results</h2>
             <p>
-              Found {searchResults.results?.results?.length || 0} documents 
-              {searchResults.query && ` for "${searchResults.query}"`}
+              Found {searchResults.entries?.length || 0} documents 
+              for "{searchQuery}"
             </p>
           </div>
           
-          {searchResults.results?.results?.length > 0 ? (
-            searchResults.results.results.map((result, index) => (
+          {searchResults.entries?.length > 0 ? (
+            searchResults.entries.map((entry, index) => (
               <div key={index} className="result-item">
                 <div className="result-title">
-                  {result.title || result.id || 'Untitled Document'}
+                  {entry.fields?.title || entry.id || 'Untitled Document'}
                 </div>
                 
                 <div className="result-meta">
-                  {result.practice_area && (
-                    <span className="meta-item">Practice Area: {result.practice_area}</span>
+                  {entry.fields?.practice_area && (
+                    <span className="meta-item">Practice Area: {entry.fields.practice_area}</span>
                   )}
-                  {result.jurisdiction && (
-                    <span className="meta-item">Jurisdiction: {result.jurisdiction}</span>
+                  {entry.fields?.jurisdiction && (
+                    <span className="meta-item">Jurisdiction: {entry.fields.jurisdiction}</span>
                   )}
-                  {result.authority_level && (
-                    <span className="meta-item">Authority: {result.authority_level}</span>
+                  {entry.fields?.authority_level && (
+                    <span className="meta-item">Authority: {entry.fields.authority_level}</span>
                   )}
-                  {result.document_type && (
-                    <span className="meta-item">Type: {result.document_type}</span>
+                  {entry.fields?.document_type && (
+                    <span className="meta-item">Type: {entry.fields.document_type}</span>
                   )}
-                  {result.publication_date && (
-                    <span className="meta-item">Published: {formatDate(result.publication_date)}</span>
+                  {entry.fields?.publication_date && (
+                    <span className="meta-item">Published: {formatDate(entry.fields.publication_date)}</span>
                   )}
                 </div>
 
-                {result.summary && (
+                {entry.fields?.summary && (
                   <div className="result-summary">
-                    {result.summary}
+                    {entry.fields.summary}
                   </div>
                 )}
 
-                {result.author && (
+                {entry.fields?.content_text && (
                   <div className="result-summary">
-                    <strong>Author:</strong> {result.author}
+                    <strong>Content Preview:</strong> {entry.fields.content_text.substring(0, 300)}...
                   </div>
                 )}
 
-                {result.citations && result.citations.length > 0 && (
+                {entry.fields?.author && (
                   <div className="result-summary">
-                    <strong>Citations:</strong> {result.citations.join(', ')}
-                  </div>
-                )}
-
-                {result.keywords && result.keywords.length > 0 && (
-                  <div className="result-summary">
-                    <strong>Keywords:</strong> {result.keywords.join(', ')}
+                    <strong>Author:</strong> {entry.fields.author}
                   </div>
                 )}
 
                 <div className="result-score">
-                  {result.similarity_score && (
-                    <span style={{ color: getScoreColor(result.similarity_score) }}>
-                      Similarity: {(result.similarity_score * 100).toFixed(1)}%
+                  {entry.fields?.authority_score && (
+                    <span style={{ color: getScoreColor(entry.fields.authority_score) }}>
+                      Authority: {(entry.fields.authority_score * 100).toFixed(1)}%
                     </span>
                   )}
-                  {result.authority_score && (
-                    <span style={{ color: getScoreColor(result.authority_score), marginLeft: '1rem' }}>
-                      Authority: {(result.authority_score * 100).toFixed(1)}%
-                    </span>
-                  )}
-                  {result.citation_count && (
+                  {entry.fields?.citation_count && (
                     <span style={{ marginLeft: '1rem' }}>
-                      Citations: {result.citation_count}
+                      Citations: {entry.fields.citation_count}
                     </span>
                   )}
                 </div>
 
-                {result.source_url && (
+                {entry.fields?.source_url && (
                   <div style={{ marginTop: '0.5rem' }}>
-                    <a href={result.source_url} target="_blank" rel="noopener noreferrer">
+                    <a href={entry.fields.source_url} target="_blank" rel="noopener noreferrer">
                       View Source
                     </a>
                   </div>

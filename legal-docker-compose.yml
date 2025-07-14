@@ -154,12 +154,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
-      - REACT_APP_SUPERLINKED_URL=http://localhost:8080
+      - REACT_APP_API_URL=
+      - REACT_APP_SUPERLINKED_URL=
       - CHOKIDAR_USEPOLLING=true
       - REACT_APP_TITLE=Legal Knowledge System
     depends_on:
-      - legal-api
+      legal-superlinked:
+        condition: service_healthy
     networks:
       - legal-network
     develop:
