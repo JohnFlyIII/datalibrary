@@ -13,11 +13,12 @@ from superlinked import framework as sl
 
 @sl.schema
 class LegalDocument:
-    """Primary schema for legal documents"""
+    """Unified schema for all legal documents with multi-area support"""
     id: sl.IdField
     title: sl.String
     content_text: sl.String
-    practice_area: sl.String
+    practice_areas: sl.StringList  # Multiple practice areas: ["civil_law", "personal_injury", "medical_malpractice"]
+    legal_topics: sl.StringList    # Granular topics: ["civil_procedure", "tort_liability", "damages"]
     jurisdiction: sl.String
     authority_level: sl.String  # primary, secondary, tertiary
     document_type: sl.String   # case_law, statute, regulation, article
@@ -32,41 +33,19 @@ class LegalDocument:
     relevance_score: sl.Float      # 0.0-1.0
     citation_count: sl.Integer
     
+    # Optional specialized fields (for personal injury, medical malpractice, etc.)
+    injury_type: sl.String                # "medical_malpractice", "auto_accident", etc. (optional)
+    injury_severity: sl.String            # "minor", "moderate", "severe", "catastrophic" (optional)
+    medical_specialty: sl.String          # "surgery", "neurology", etc. (optional)
+    liability_theory: sl.String           # "negligence", "strict_liability" (optional)
+    medical_treatment: sl.String          # "emergency_only", "ongoing", "long_term" (optional)
+    trial_readiness: sl.String            # "settlement_track", "trial_ready" (optional)
+    case_number: sl.String                # Case reference number (optional)
+    
     # Metadata
     source_url: sl.String
     pdf_path: sl.String
     word_count: sl.Integer
-
-
-@sl.schema
-class PersonalInjuryDocument:
-    """Schema for personal injury and medical malpractice cases"""
-    id: sl.IdField
-    title: sl.String
-    content_text: sl.String
-    practice_area: sl.String
-    jurisdiction: sl.String
-    authority_level: sl.String
-    document_type: sl.String
-    publication_date: sl.Timestamp
-    author: sl.String
-    citations: sl.String  # JSON string list
-    keywords: sl.String   # JSON string list
-    summary: sl.String
-    authority_score: sl.Float
-    citation_count: sl.Integer
-    source_url: sl.String
-    pdf_path: sl.String
-    word_count: sl.Integer
-    
-    # Personal injury specific fields
-    injury_type: sl.String                # "medical_malpractice", "auto_accident", etc.
-    injury_severity: sl.String            # "minor", "moderate", "severe", "catastrophic"
-    medical_specialty: sl.String          # "surgery", "neurology", etc.
-    liability_theory: sl.String           # "negligence", "strict_liability"
-    medical_treatment: sl.String          # "emergency_only", "ongoing", "long_term"
-    trial_readiness: sl.String            # "settlement_track", "trial_ready"
-    case_number: sl.String
 
 
 # =============================================================================
@@ -74,7 +53,6 @@ class PersonalInjuryDocument:
 # =============================================================================
 
 legal_document = LegalDocument()
-personal_injury_document = PersonalInjuryDocument()
 
 
 # =============================================================================
@@ -102,9 +80,9 @@ keywords_space = sl.TextSimilaritySpace(
     model="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-# Practice area categorization
-practice_area_space = sl.CategoricalSimilaritySpace(
-    category_input=legal_document.practice_area,
+# Practice areas categorization (multi-value support)
+practice_areas_space = sl.CategoricalSimilaritySpace(
+    category_input=legal_document.practice_areas,  # Now StringList
     categories=[
         "immigration_law",
         "family_law", 
@@ -113,12 +91,36 @@ practice_area_space = sl.CategoricalSimilaritySpace(
         "real_estate_law",
         "employment_law",
         "personal_injury",
+        "medical_malpractice",
         "estate_planning",
         "civil_law",
-        "tort_law"
+        "tort_law",
+        "constitutional_law",
+        "administrative_law"
     ],
     negative_filter=-0.5,
     uncategorized_as_category=False
+)
+
+# Legal topics categorization (granular multi-value support) 
+legal_topics_space = sl.CategoricalSimilaritySpace(
+    category_input=legal_document.legal_topics,  # StringList
+    categories=[
+        "civil_procedure",
+        "tort_liability",
+        "damages",
+        "medical_negligence",
+        "statute_of_limitations",
+        "venue",
+        "discovery",
+        "judgments",
+        "contracts",
+        "evidence",
+        "appeals",
+        "injunctions"
+    ],
+    negative_filter=-0.4,
+    uncategorized_as_category=True  # Allow unknown topics
 )
 
 # Document type categorization
@@ -167,33 +169,34 @@ recency_space = sl.RecencySpace(
     negative_filter=-0.2
 )
 
-# Personal injury specific spaces
-pi_content_space = sl.TextSimilaritySpace(
-    text=personal_injury_document.content_text,
-    model="sentence-transformers/all-mpnet-base-v2",
-)
-
-pi_injury_type_space = sl.CategoricalSimilaritySpace(
-    category_input=personal_injury_document.injury_type,
+# Specialized spaces for optional fields (personal injury, medical malpractice)
+injury_type_space = sl.CategoricalSimilaritySpace(
+    category_input=legal_document.injury_type,
     categories=[
         "medical_malpractice",
         "auto_accident",
         "slip_fall",
         "product_liability",
-        "workplace_injury"
+        "workplace_injury",
+        "wrongful_death",
+        "nursing_home_abuse"
     ],
     negative_filter=-0.4,
     uncategorized_as_category=True
 )
 
-pi_medical_specialty_space = sl.CategoricalSimilaritySpace(
-    category_input=personal_injury_document.medical_specialty,
+medical_specialty_space = sl.CategoricalSimilaritySpace(
+    category_input=legal_document.medical_specialty,
     categories=[
         "surgery",
         "neurosurgery",
         "cardiology",
         "orthopedics",
-        "emergency_medicine"
+        "emergency_medicine",
+        "anesthesiology",
+        "radiology",
+        "obstetrics",
+        "pediatrics"
     ],
     negative_filter=-0.3,
     uncategorized_as_category=True
@@ -204,22 +207,28 @@ pi_medical_specialty_space = sl.CategoricalSimilaritySpace(
 # INDEXES
 # =============================================================================
 
-# Primary legal research index
+# Comprehensive legal research index (unified)
 legal_research_index = sl.Index([
     content_space,
     title_space, 
     summary_space,
-    practice_area_space,
+    practice_areas_space,      # Updated to multi-value
+    legal_topics_space,        # New granular topics
     authority_space,
     recency_space,
-    citation_space
+    citation_space,
+    document_type_space
 ])
 
-# Personal injury specialized index
-personal_injury_index = sl.Index([
-    pi_content_space,
-    pi_injury_type_space,
-    pi_medical_specialty_space,
+# Specialized medical malpractice index
+medical_malpractice_index = sl.Index([
+    content_space,
+    title_space,
+    summary_space,
+    practice_areas_space,
+    legal_topics_space,
+    injury_type_space,
+    medical_specialty_space,
     authority_space,
     recency_space
 ])
@@ -227,8 +236,9 @@ personal_injury_index = sl.Index([
 # Quick lookup index
 quick_lookup_index = sl.Index([
     title_space,
-    practice_area_space,
-    document_type_space
+    practice_areas_space,      # Updated to multi-value
+    document_type_space,
+    legal_topics_space
 ])
 
 
@@ -236,7 +246,7 @@ quick_lookup_index = sl.Index([
 # QUERIES
 # =============================================================================
 
-# Comprehensive legal research query
+# Comprehensive legal research query (enhanced with multi-area support)
 legal_research_query = (
     sl.Query(
         legal_research_index,
@@ -244,10 +254,12 @@ legal_research_query = (
             content_space: sl.Param("content_weight", default=1.0),
             title_space: sl.Param("title_weight", default=0.6),
             summary_space: sl.Param("summary_weight", default=0.7),
-            practice_area_space: sl.Param("practice_area_weight", default=0.8),
+            practice_areas_space: sl.Param("practice_area_weight", default=0.8),  # Backward compatible
+            legal_topics_space: sl.Param("legal_topics_weight", default=0.6),     # New
             authority_space: sl.Param("authority_weight", default=0.9),
             recency_space: sl.Param("recency_weight", default=0.4),
             citation_space: sl.Param("citation_weight", default=0.3),
+            document_type_space: sl.Param("document_type_weight", default=0.5),
         }
     )
     .find(legal_document)
@@ -256,13 +268,15 @@ legal_research_query = (
     .limit(sl.Param("limit", default=20))
 )
 
-# Quick practice area search
+# Quick practice area search (updated for multi-area)
 practice_area_query = (
     sl.Query(
         quick_lookup_index,
         weights={
             title_space: sl.Param("title_weight", default=1.0),
-            practice_area_space: sl.Param("practice_area_weight", default=1.2),
+            practice_areas_space: sl.Param("practice_area_weight", default=1.2),  # Backward compatible
+            legal_topics_space: sl.Param("legal_topics_weight", default=0.8),     # New
+            document_type_space: sl.Param("document_type_weight", default=0.5),
         }
     )
     .find(legal_document)
@@ -288,19 +302,24 @@ authority_query = (
     .limit(sl.Param("limit", default=15))
 )
 
-# Medical malpractice focused query
+# Medical malpractice focused query (updated for unified schema)
 medical_malpractice_query = (
     sl.Query(
-        personal_injury_index,
+        medical_malpractice_index,
         weights={
-            pi_content_space: sl.Param("content_weight", default=1.0),
-            pi_injury_type_space: sl.Param("injury_type_weight", default=1.3),
-            pi_medical_specialty_space: sl.Param("medical_specialty_weight", default=1.5),
+            content_space: sl.Param("content_weight", default=1.0),
+            title_space: sl.Param("title_weight", default=0.7),
+            summary_space: sl.Param("summary_weight", default=0.8),
+            practice_areas_space: sl.Param("practice_area_weight", default=1.2),
+            legal_topics_space: sl.Param("legal_topics_weight", default=1.1),
+            injury_type_space: sl.Param("injury_type_weight", default=1.3),
+            medical_specialty_space: sl.Param("medical_specialty_weight", default=1.5),
             authority_space: sl.Param("authority_weight", default=1.0),
+            recency_space: sl.Param("recency_weight", default=0.6),
         }
     )
-    .find(personal_injury_document)
-    .similar(pi_content_space.text, sl.Param("search_query"))
+    .find(legal_document)
+    .similar(content_space.text, sl.Param("search_query"))
     .select_all()
     .limit(sl.Param("limit", default=15))
 )
@@ -327,9 +346,8 @@ recent_developments_query = (
 # DATA SOURCES
 # =============================================================================
 
-# REST sources for production API ingestion
+# Unified REST source for all legal documents
 legal_document_source = sl.RestSource(legal_document)
-personal_injury_source = sl.RestSource(personal_injury_document)
 
 
 # =============================================================================
@@ -367,10 +385,10 @@ recent_developments_rest_query = sl.RestQuery(
 # EXECUTORS
 # =============================================================================
 
-# Production REST executor with API endpoints
+# Production REST executor with unified schema
 executor = sl.RestExecutor(
-    sources=[legal_document_source, personal_injury_source],
-    indices=[legal_research_index, personal_injury_index, quick_lookup_index],
+    sources=[legal_document_source],  # Single unified source
+    indices=[legal_research_index, medical_malpractice_index, quick_lookup_index],  # Updated indices
     queries=[
         legal_research_rest_query,
         practice_area_rest_query, 
