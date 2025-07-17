@@ -40,7 +40,7 @@ jurisdiction_space = sl.CategoricalSimilaritySpace(
         "north_carolina",
         "michigan",
         
-        # Local
+        # Local@here
         "municipal",
         "county",
         "local_government",
