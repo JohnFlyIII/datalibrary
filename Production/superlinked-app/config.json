@@ -1,0 +1,56 @@
+{
+  "models": {
+    "text_similarity_model": "sentence-transformers/all-mpnet-base-v2",
+    "multilingual_model": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+    "legal_specialized_model": "sentence-transformers/all-mpnet-base-v2",
+    "fast_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "space_type_models": {
+      "discovery": "sentence-transformers/all-mpnet-base-v2",
+      "exploration": "sentence-transformers/all-mpnet-base-v2",
+      "deep_dive": "sentence-transformers/all-mpnet-base-v2",
+      "fact_extraction": "sentence-transformers/all-mpnet-base-v2",
+      "summary": "sentence-transformers/all-mpnet-base-v2",
+      "multilingual": "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+      "fast_search": "sentence-transformers/all-MiniLM-L6-v2"
+    },
+    "model_dimensions": {
+      "sentence-transformers/all-mpnet-base-v2": 768,
+      "sentence-transformers/paraphrase-multilingual-mpnet-base-v2": 768,
+      "sentence-transformers/all-MiniLM-L6-v2": 384,
+      "openai/text-embedding-ada-002": 1536,
+      "cohere/embed-english-v3.0": 1024
+    }
+  },
+  "vector_db": {
+    "host": "qdrant",
+    "port": 6333,
+    "collection_name": "legal_knowledge",
+    "timeout": 30,
+    "distance_metric": "Cosine",
+    "shard_number": 4,
+    "replication_factor": 1,
+    "batch_size": 100,
+    "parallel_workers": 4
+  },
+  "processing": {
+    "chunk_size": 2000,
+    "chunk_overlap": 200,
+    "min_chunk_size": 500,
+    "respect_sections": true,
+    "fact_extraction_model": "gpt-4-turbo",
+    "summary_model": "gpt-4-turbo",
+    "max_facts_per_page": 10,
+    "confidence_threshold": 0.85,
+    "max_document_size_mb": 100,
+    "timeout_seconds": 300
+  },
+  "query": {
+    "default_limit": 10,
+    "max_limit": 100,
+    "score_threshold": 0.7,
+    "default_space_weight": 1.0,
+    "boost_factor": 2.0,
+    "enable_caching": true,
+    "cache_ttl_seconds": 900
+  }
+}
