@@ -13,7 +13,7 @@ from superlinked import framework as sl
 
 @sl.schema
 class LegalDocument:
-    """Unified schema for all legal documents with multi-area support"""
+    """Unified schema for all legal documents with multi-area support and passage-level chunking"""
     id: sl.IdField
     title: sl.String
     content_text: sl.String
@@ -42,6 +42,14 @@ class LegalDocument:
     trial_readiness: sl.String            # "settlement_track", "trial_ready" (optional)
     case_number: sl.String                # Case reference number (optional)
     
+    # Passage-level fields (for chunked documents)
+    parent_document_id: sl.String         # ID of the parent document if this is a chunk
+    chunk_index: sl.Integer               # Position of this chunk in the document (0-based)
+    start_char: sl.Integer                # Character offset where this chunk starts in original document
+    end_char: sl.Integer                  # Character offset where this chunk ends in original document
+    chunk_context: sl.String             # Brief context around this chunk for citation purposes
+    is_chunk: sl.String                  # "true" if this is a chunk, "false" if full document
+    
     # Metadata
     source_url: sl.String
     pdf_path: sl.String
@@ -59,10 +67,14 @@ legal_document = LegalDocument()
 # EMBEDDING SPACES
 # =============================================================================
 
-# Text similarity for semantic search
+# Text similarity for semantic search with chunking support
 content_space = sl.TextSimilaritySpace(
-    text=legal_document.content_text,
-    model="sentence-transformers/all-mpnet-base-v2",
+    text=sl.chunk(
+        legal_document.content_text,
+        chunk_size=1000,      # ~1000 tokens per chunk for manageable sections
+        chunk_overlap=200     # 200 token overlap to maintain context
+    ),
+    model="sentence-transformers/all-mpnet-base-v2"
 )
 
 title_space = sl.TextSimilaritySpace(
@@ -246,7 +258,7 @@ quick_lookup_index = sl.Index([
 # QUERIES
 # =============================================================================
 
-# Comprehensive legal research query (enhanced with multi-area support)
+# Comprehensive legal research query (enhanced with multi-area support and passage-level search)
 legal_research_query = (
     sl.Query(
         legal_research_index,
@@ -266,6 +278,24 @@ legal_research_query = (
     .similar(content_space.text, sl.Param("search_query"))
     .select_all()
     .limit(sl.Param("limit", default=20))
+)
+
+# Passage-level search query for finding specific sections within documents
+passage_search_query = (
+    sl.Query(
+        legal_research_index,
+        weights={
+            content_space: sl.Param("content_weight", default=1.5),  # Higher weight on content for passage search
+            practice_areas_space: sl.Param("practice_area_weight", default=0.6),
+            legal_topics_space: sl.Param("legal_topics_weight", default=0.6),
+            authority_space: sl.Param("authority_weight", default=0.7),
+        }
+    )
+    .find(legal_document)
+    .similar(content_space.text, sl.Param("search_query"))
+    .filter(legal_document.is_chunk == "true")  # Only return chunks for passage-level results
+    .select_all()
+    .limit(sl.Param("limit", default=50))  # More results for passage-level search
 )
 
 # Quick practice area search (updated for multi-area)
@@ -380,6 +410,11 @@ recent_developments_rest_query = sl.RestQuery(
     recent_developments_query
 )
 
+passage_search_rest_query = sl.RestQuery(
+    sl.RestDescriptor("passage_search"), 
+    passage_search_query
+)
+
 
 # =============================================================================
 # EXECUTORS
@@ -394,7 +429,8 @@ executor = sl.RestExecutor(
         practice_area_rest_query, 
         authority_rest_query,
         medical_malpractice_rest_query,
-        recent_developments_rest_query
+        recent_developments_rest_query,
+        passage_search_rest_query
     ],
     vector_database=sl.QdrantVectorDatabase(
         url=os.getenv("QDRANT_URL", "http://qdrant:6333"),
@@ -427,5 +463,6 @@ except Exception as e:
     print(f"⚠️ CORS configuration failed: {e}")
 
 print("🏛️ Legal Knowledge System Superlinked Configuration Loaded!")
-print(f"Available Queries: legal_research_query, practice_area_query, authority_query, medical_malpractice_query, recent_developments_query")
+print(f"Available Queries: legal_research_query, practice_area_query, authority_query, medical_malpractice_query, recent_developments_query, passage_search_query")
 print(f"Vector Database: {os.getenv('QDRANT_URL', 'In-Memory (Development)')}")
+print(f"🔍 Passage-level search enabled for finding specific sections and citations")
