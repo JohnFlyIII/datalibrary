@@ -1,0 +1,115 @@
+# Production Data .gitignore
+
+# Raw PDF Data
+raw_data/*.pdf
+raw_data/**/*.pdf
+raw_data/**/*.PDF
+
+# Output Directories
+output/
+output/metadata/
+output/embeddings/
+output/chunks/
+output/logs/
+
+# Processed Data
+processed_data/
+*.json
+!config.json
+!**/example.json
+
+# Embeddings
+embeddings/
+*.npy
+*.pkl
+*.pt
+
+# Exports and Archives
+exports/
+*.tar.gz
+*.zip
+*.tar
+
+# Environment Files
+.env
+.env.local
+!.env.local.example
+.env.production
+.env.*.local
+
+# API Keys and Credentials
+**/credentials/
+**/secrets/
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Logs
+*.log
+logs/
+*.out
+*.err
+
+# Temporary Files
+temp/
+tmp/
+.tmp/
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Model Files
+models/
+*.bin
+*.h5
+*.ckpt
+
+# Cache
+.cache/
+*.cache
+
+# Test Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Documentation Build
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Keep these
+!.gitkeep
+!README.md
+!requirements*.txt
