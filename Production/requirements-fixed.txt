@@ -1,0 +1,40 @@
+# Fixed requirements for Legal Document Processing
+# These versions are tested to work together without conflicts
+
+# Core AI/ML dependencies - Install in this order!
+numpy==1.24.3                      # Must be installed first
+pandas==2.0.3                      # Compatible with numpy 1.24.3
+scikit-learn==1.3.0               # Compatible with above versions
+
+# NLP and embeddings
+nltk==3.8.1                       # Natural language toolkit
+huggingface-hub==0.19.4           # Compatible with sentence-transformers 2.2.2
+transformers==4.36.0              # Transformer models
+sentence-transformers==2.2.2      # For embeddings
+tiktoken==0.5.1                   # Token counting
+
+# Claude API
+anthropic==0.18.1                 # Claude API client
+
+# PDF processing
+pdfplumber==0.9.0                 # PDF text extraction
+pypdf2==3.0.1                     # Alternative PDF handler
+pytesseract==0.3.10              # OCR for scanned PDFs
+
+# Utilities
+python-dotenv==1.0.0             # Environment management
+jsonlines==4.0.0                 # JSONL file handling
+tqdm==4.66.1                     # Progress bars
+click==8.1.7                     # CLI interface
+requests==2.31.0                 # HTTP requests
+tenacity==8.2.3                  # Retry logic
+rich==13.5.2                     # Better terminal output
+
+# Development tools (optional)
+pytest==7.4.0                    # Testing
+black==23.7.0                    # Code formatting
+flake8==6.1.0                    # Linting
+
+# PyTorch (if needed for embeddings - install separately due to size)
+# torch==2.0.1
+# torchvision==0.15.2
