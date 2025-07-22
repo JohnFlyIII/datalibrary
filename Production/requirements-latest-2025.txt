@@ -1,0 +1,40 @@
+# Latest requirements for Legal Document Processing - July 2025
+# These are more recent versions with better compatibility
+
+# Core AI/ML dependencies
+numpy>=1.26.0,<2.0.0              # Latest stable numpy
+pandas>=2.2.0,<3.0.0              # Latest pandas 2.x
+scikit-learn>=1.4.0,<2.0.0       # Latest sklearn
+
+# NLP and embeddings  
+nltk>=3.8.1                       # Natural language toolkit
+huggingface-hub>=0.23.0          # Latest HF hub
+transformers>=4.40.0             # Latest transformers
+sentence-transformers>=3.0.0      # Latest sentence-transformers
+tiktoken>=0.7.0                  # Latest tokenizer
+
+# Claude API - check for latest
+anthropic>=0.25.0                # Much newer version available
+
+# PDF processing
+pdfplumber>=0.11.0               # Latest version
+pypdf>=4.0.0                     # pypdf2 is now just 'pypdf'
+pytesseract>=0.3.13             # Latest OCR wrapper
+
+# Utilities
+python-dotenv>=1.0.1            # Environment management
+jsonlines>=4.0.0                # JSONL handling
+tqdm>=4.66.0                    # Progress bars
+click>=8.1.7                    # CLI framework
+requests>=2.32.0                # HTTP requests
+tenacity>=8.3.0                 # Retry logic
+rich>=13.7.0                    # Terminal output
+
+# Optional but recommended
+pytest>=8.0.0                   # Testing framework
+black>=24.0.0                   # Code formatter
+ruff>=0.5.0                     # Fast Python linter (replaces flake8)
+
+# For embeddings - install separately due to size
+# torch>=2.3.0                  # Latest PyTorch
+# torchvision>=0.18.0          # Latest torchvision
