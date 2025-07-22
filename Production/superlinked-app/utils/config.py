@@ -90,14 +90,23 @@ class ProcessingConfig:
     respect_sections: bool = True
     
     # AI preprocessing
-    fact_extraction_model: str = "gpt-4-turbo"
-    summary_model: str = "gpt-4-turbo"
+    ai_provider: str = "anthropic"  # "anthropic" or "openai"
+    fact_extraction_model: str = "claude-3-sonnet-20240229"
+    summary_model: str = "claude-3-sonnet-20240229"
     max_facts_per_page: int = 10
     confidence_threshold: float = 0.85
+    
+    # Claude-specific settings
+    claude_models: Dict[str, str] = field(default_factory=lambda: {
+        "opus": "claude-3-opus-20240229",
+        "sonnet": "claude-3-sonnet-20240229",
+        "haiku": "claude-3-haiku-20240307"
+    })
     
     # Processing limits
     max_document_size_mb: int = 100
     timeout_seconds: int = 300
+    max_tokens_per_request: int = 4000
 
 @dataclass
 class QueryConfig:
@@ -155,6 +164,11 @@ class Config:
             self.processing.chunk_size = int(os.getenv('CHUNK_SIZE'))
         if os.getenv('CHUNK_OVERLAP'):
             self.processing.chunk_overlap = int(os.getenv('CHUNK_OVERLAP'))
+        if os.getenv('AI_PROVIDER'):
+            self.processing.ai_provider = os.getenv('AI_PROVIDER')
+        if os.getenv('CLAUDE_MODEL'):
+            self.processing.fact_extraction_model = os.getenv('CLAUDE_MODEL')
+            self.processing.summary_model = os.getenv('CLAUDE_MODEL')
     
     def _load_from_file(self, config_file: str):
         """Load configuration from JSON file"""

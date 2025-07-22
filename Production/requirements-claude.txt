@@ -1,0 +1,33 @@
+# Requirements for Local Processing with Claude
+
+# Core dependencies
+anthropic==0.18.1          # Claude API client
+sentence-transformers==2.2.2  # For embeddings
+pdfplumber==0.9.0          # PDF text extraction
+pypdf2==3.0.1              # Alternative PDF handler
+python-dotenv==1.0.0       # Environment management
+
+# Data processing
+pandas==2.1.0              # Data manipulation
+numpy==1.24.3              # Numerical operations
+jsonlines==4.0.0           # JSONL file handling
+
+# Utilities
+tqdm==4.66.1               # Progress bars
+click==8.1.7               # CLI interface
+requests==2.31.0           # HTTP requests
+tenacity==8.2.3            # Retry logic
+
+# Optional but recommended
+pytesseract==0.3.10        # OCR for scanned PDFs
+tiktoken==0.5.1            # Token counting
+rich==13.5.2               # Better terminal output
+
+# Development tools (optional)
+pytest==7.4.0              # Testing
+black==23.7.0              # Code formatting
+flake8==6.1.0              # Linting
+
+# For embeddings (if not using sentence-transformers)
+# openai==1.3.0            # For ada-002 embeddings
+# cohere==4.32             # For Cohere embeddings
