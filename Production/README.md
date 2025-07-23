@@ -1,5 +1,11 @@
 # Legal Knowledge Platform - Production System
 
+## ⚠️ IMPORTANT: Current Status (2025-07-23)
+
+- **working_simple_example/** - ✅ FULLY WORKING simple car example with Superlinked 1.45.2
+- **superlinked-app/** - 🚧 NEW implementation starting from working example
+- **superlinked-app-not-working/** - ❌ Previous complex implementation (moved for reference)
+
 ## Overview
 
 This system implements a progressive disclosure legal knowledge platform designed for iterative discovery and refinement of legal research, rather than attempting to provide perfect answers in a single query.

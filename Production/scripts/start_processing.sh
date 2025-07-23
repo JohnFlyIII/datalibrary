@@ -63,7 +63,7 @@ read -p "Select option (1-8): " choice
 case $choice in
     1)
         echo -e "\n${BLUE}Creating PDF inventory...${NC}"
-        python -c "
+        python3 -c "
 import json
 from pathlib import Path
 
@@ -88,14 +88,14 @@ with open('output/inventory.json', 'w') as f:
         
     2)
         echo -e "\n${BLUE}Running basic processing (no AI)...${NC}"
-        python scripts/quick_process.py raw_data output
+        python3 scripts/quick_process.py raw_data output
         echo -e "${GREEN}Basic processing complete!${NC}"
         echo "Check output/metadata/ for results"
         ;;
         
     3)
         echo -e "\n${BLUE}Testing Claude integration...${NC}"
-        python scripts/test_claude_extraction.py
+        python3 scripts/test_claude_extraction.py
         ;;
         
     4)
@@ -105,7 +105,7 @@ with open('output/inventory.json', 'w') as f:
         read -p "Continue? (y/n): " confirm
         
         if [ "$confirm" = "y" ]; then
-            python scripts/process_documents_claude.py \
+            python3 scripts/process_documents_claude.py \
                 --input-dir raw_data \
                 --output-dir output \
                 --batch-size 10
@@ -114,7 +114,7 @@ with open('output/inventory.json', 'w') as f:
         
     5)
         echo -e "\n${BLUE}Starting review interface...${NC}"
-        python scripts/review_metadata.py --metadata-dir output/metadata
+        python3 scripts/review_metadata.py --metadata-dir output/metadata
         ;;
         
     6)
@@ -148,10 +148,10 @@ with open('output/inventory.json', 'w') as f:
         
         if [ "$confirm" = "y" ]; then
             # Basic processing
-            python scripts/quick_process.py raw_data output
+            python3 scripts/quick_process.py raw_data output
             
             # AI enhancement
-            python scripts/process_documents_claude.py \
+            python3 scripts/process_documents_claude.py \
                 --input-dir raw_data \
                 --output-dir output \
                 --batch-size 10
