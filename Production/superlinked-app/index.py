@@ -2,15 +2,17 @@ from superlinked import framework as sl
 
 
 @sl.schema
-class CarSchema:
+class LegalDocument:
     id: sl.IdField
-    make: sl.String
-    model: sl.String
+    title: sl.String
+    content: sl.String
 
 
-car_schema = CarSchema()
+legal_document = LegalDocument()
 
-car_make_text_space = sl.TextSimilaritySpace(text=car_schema.make, model="all-MiniLM-L6-v2")
-car_model_text_space = sl.TextSimilaritySpace(text=car_schema.model, model="all-MiniLM-L6-v2")
+# Text similarity spaces for legal document search
+title_space = sl.TextSimilaritySpace(text=legal_document.title, model="all-MiniLM-L6-v2")
+content_space = sl.TextSimilaritySpace(text=legal_document.content, model="all-MiniLM-L6-v2")
 
-index = sl.Index([car_make_text_space, car_model_text_space])
+# Create index with both title and content spaces
+index = sl.Index([title_space, content_space])

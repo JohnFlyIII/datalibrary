@@ -1,8 +1,8 @@
 # Superlinked App - Legal Knowledge System
 
-## Current Status: Starting Fresh from Working Example
+## Current Status: Phase 1 Complete ✅
 
-This directory contains a new implementation of the legal knowledge system, starting from the proven working simple example and gradually building towards the full functionality.
+Successfully transitioned from car example to legal document search!
 
 ## Development Approach
 
@@ -12,7 +12,7 @@ This directory contains a new implementation of the legal knowledge system, star
    - Basic text similarity search
 
 2. **Incremental Development Plan**
-   - [ ] Replace car schema with basic legal document schema
+   - [x] Replace car schema with basic legal document schema ✅
    - [ ] Add document ingestion from JSON files
    - [ ] Implement hierarchical search (jurisdiction, practice areas)
    - [ ] Add temporal/recency scoring
@@ -21,18 +21,63 @@ This directory contains a new implementation of the legal knowledge system, star
 
 ## Current Implementation
 
-The app currently implements a simple car search example with:
-- Schema: `CarSchema` with id, make, and model fields
-- Two text similarity spaces for make and model
+The app implements legal document search with:
+- Schema: `LegalDocument` with id, title, and content fields
+- Two text similarity spaces:
+  - `title_space` - searches document titles
+  - `content_space` - searches document content
 - REST API for ingestion and search
 - Qdrant vector database integration
 
+## API Endpoints
+
+- **Ingest**: `POST /api/v1/ingest/legal_document`
+- **Search**: `POST /api/v1/search/search`
+- **Health**: `GET /health`
+
+## Example Usage
+
+### Ingest Documents
+```bash
+curl -X POST http://localhost:8080/api/v1/ingest/legal_document \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "id": "1",
+      "title": "Document Title",
+      "content": "Full document content..."
+    }
+  ]'
+```
+
+### Search by Content
+```bash
+curl -X POST http://localhost:8080/api/v1/search/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content_query": "medical malpractice",
+    "title_query": "",
+    "limit": 5
+  }'
+```
+
+### Search by Title
+```bash
+curl -X POST http://localhost:8080/api/v1/search/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content_query": "",
+    "title_query": "Texas",
+    "limit": 3
+  }'
+```
+
 ## Next Steps
 
-1. Create a minimal `LegalDocument` schema with just id, title, and content
-2. Test basic ingestion and search
-3. Gradually add fields and complexity
-4. Port functionality from `superlinked-app-not-working` piece by piece
+1. Add document metadata fields (jurisdiction, document_type)
+2. Integrate with existing JSON data in output/metadata/
+3. Add hierarchical search capabilities
+4. Implement temporal/recency scoring
 
 ## Files
 
@@ -40,18 +85,3 @@ The app currently implements a simple car search example with:
 - `api.py` - API configuration and database setup
 - `query.py` - Query definitions
 - `__init__.py` - Package initialization
-
-## Testing
-
-Always test each incremental change:
-```bash
-# Rebuild and restart
-docker compose down
-docker compose build legal-superlinked
-docker compose up -d
-
-# Wait for health
-sleep 20 && curl http://localhost:8080/health
-
-# Test with appropriate data for current schema
-```

@@ -1,10 +1,10 @@
 import os
 from superlinked import framework as sl
 
-from .index import car_schema, index
+from .index import legal_document, index
 from .query import query
 
-car_source: sl.RestSource = sl.RestSource(car_schema)
+document_source: sl.RestSource = sl.RestSource(legal_document)
 
 # Use Qdrant for production
 vector_database = sl.QdrantVectorDatabase(
@@ -13,9 +13,9 @@ vector_database = sl.QdrantVectorDatabase(
 )
 
 executor = sl.RestExecutor(
-    sources=[car_source],
+    sources=[document_source],
     indices=[index],
-    queries=[sl.RestQuery(sl.RestDescriptor("query"), query)],
+    queries=[sl.RestQuery(sl.RestDescriptor("search"), query)],
     vector_database=vector_database,
 )
 

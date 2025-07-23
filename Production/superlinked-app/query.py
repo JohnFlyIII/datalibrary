@@ -1,12 +1,12 @@
 from superlinked import framework as sl
 
-from .index import car_make_text_space, car_model_text_space, car_schema, index
+from .index import title_space, content_space, legal_document, index
 
 query = (
     sl.Query(index)
-    .find(car_schema)
-    .similar(car_make_text_space.text, sl.Param("make"))
-    .similar(car_model_text_space.text, sl.Param("model"))
+    .find(legal_document)
+    .similar(title_space.text, sl.Param("title_query"))
+    .similar(content_space.text, sl.Param("content_query"))
     .select_all()
     .limit(sl.Param("limit"))
 )
