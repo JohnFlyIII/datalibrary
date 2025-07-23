@@ -412,26 +412,47 @@ def ingest_enriched_document(pdf_path: Path, metadata: Dict, superlinked_url: st
     
     return chunk_successes > 0
 
-def ingest_single_document(document_data: Dict, superlinked_url: str) -> bool:
-    """Ingest a single document to Superlinked"""
-    try:
-        url = f"{superlinked_url}/api/v1/ingest/legal_document"
-        headers = {
-            'Accept': '*/*',
-            'Content-Type': 'application/json'
-        }
-        
-        response = requests.post(url, json=document_data, headers=headers, timeout=30)
-        
-        if response.status_code in [200, 202]:
-            return True
-        else:
-            print(f"      ❌ Failed: {response.status_code} - {response.text[:100]}")
-            return False
+def ingest_single_document(document_data: Dict, superlinked_url: str, timeout: int = 300) -> bool:
+    """Ingest a single document to Superlinked with configurable timeout"""
+    max_retries = 3
+    
+    for attempt in range(max_retries):
+        try:
+            url = f"{superlinked_url}/api/v1/ingest/legal_document"
+            headers = {
+                'Accept': '*/*',
+                'Content-Type': 'application/json'
+            }
             
-    except Exception as e:
-        print(f"      ❌ Error: {e}")
-        return False
+            # Much longer timeout (5 minutes default)
+            response = requests.post(url, json=document_data, headers=headers, timeout=timeout)
+            
+            if response.status_code in [200, 201, 202]:  # Accept various success codes
+                return True
+            elif response.status_code == 504:  # Gateway timeout
+                print(f"      ⏰ Timeout on attempt {attempt + 1}, retrying...")
+                timeout = timeout * 2  # Double timeout for retry
+                time.sleep(5)  # Wait before retry
+                continue
+            else:
+                print(f"      ❌ Failed: {response.status_code} - {response.text[:100]}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            print(f"      ⏰ Request timeout on attempt {attempt + 1}/{max_retries} (waited {timeout}s)")
+            if attempt < max_retries - 1:
+                timeout = timeout * 2  # Double timeout for retry
+                time.sleep(5)
+                continue
+            return False
+        except requests.exceptions.ConnectionError:
+            print(f"      🔌 Connection error - is Superlinked running?")
+            return False
+        except Exception as e:
+            print(f"      ❌ Error: {e}")
+            return False
+    
+    return False
 
 def main():
     parser = argparse.ArgumentParser(description='Ingest enriched legal documents to Superlinked')
