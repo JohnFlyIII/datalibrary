@@ -174,17 +174,40 @@ def test_ingestion_endpoint(superlinked_url: str, endpoint: str) -> bool:
     """Test if an ingestion endpoint works"""
     print_status(f"Testing endpoint {endpoint}...", "info")
     
+    # Include ALL required fields from the schema
     test_doc = {
         "id": f"test_{uuid.uuid4().hex[:8]}",
         "title": "Test Document",
         "content_text": "This is a test document for setup verification",
+        
+        # Required fields that were missing
+        "summary": "Test document summary for verification",
         "practice_areas": "civil",
         "legal_topics": "test",
         "jurisdiction": "texas",
         "authority_level": "primary",
         "document_type": "statute",
         "publication_date": int(datetime.now().timestamp()),
-        "author": "Test"
+        "author": "Test",
+        
+        # Additional fields that might be required
+        "keywords": json.dumps(["test", "verification"]),
+        "citations": json.dumps([]),
+        "authority_score": 0.5,
+        "relevance_score": 0.5,
+        "citation_count": 0,
+        "source_url": "",
+        "pdf_path": "/test/path.pdf",
+        "word_count": 10,
+        
+        # Optional fields with empty values
+        "injury_type": "",
+        "injury_severity": "",
+        "medical_specialty": "",
+        "liability_theory": "",
+        "medical_treatment": "",
+        "trial_readiness": "",
+        "case_number": ""
     }
     
     try:
@@ -382,23 +405,45 @@ def main():
             
             print_status(f"Extracted {len(full_text)} characters", "success")
             
-            # Prepare document data (simplified for testing)
+            # Prepare document data with ALL required fields
             doc_data = {
+                # Core required fields
                 "id": metadata.get('id', str(uuid.uuid4())),
                 "title": metadata.get('title', pdf_file.stem),
                 "content_text": metadata.get('executive_summary', full_text[:1000]),
+                "summary": metadata.get('executive_summary', 'Legal document summary'),
+                
+                # Classification fields
                 "practice_areas": "civil,medical_malpractice",
                 "legal_topics": ','.join(extract_legal_topics(metadata)[:3]),
                 "jurisdiction": metadata.get('jurisdiction_state', 'texas'),
                 "authority_level": "primary",
                 "document_type": metadata.get('content_type', 'statute'),
+                
+                # Metadata fields
                 "publication_date": int(datetime.now().timestamp()),
                 "author": "Texas Legislature",
-                "summary": metadata.get('executive_summary', ''),
-                "fact_count": metadata.get('fact_count', 0),
                 "keywords": json.dumps(metadata.get('key_takeaways', [])),
+                "citations": json.dumps([]),
+                
+                # Scoring fields
+                "authority_score": 0.8,
+                "relevance_score": 0.8,
+                "citation_count": metadata.get('fact_count', 0),
+                
+                # Source fields
+                "source_url": "",
                 "pdf_path": str(pdf_file),
-                "word_count": len(full_text.split())
+                "word_count": len(full_text.split()),
+                
+                # Empty optional fields
+                "injury_type": "",
+                "injury_severity": "",
+                "medical_specialty": "",
+                "liability_theory": "",
+                "medical_treatment": "",
+                "trial_readiness": "",
+                "case_number": ""
             }
             
             # Ingest document
