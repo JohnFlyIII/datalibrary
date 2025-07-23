@@ -1,8 +1,8 @@
 # Superlinked App - Legal Knowledge System
 
-## Current Status: Phase 1 Complete ✅
+## Current Status: Phase 2 Complete ✅
 
-Successfully transitioned from car example to legal document search!
+Successfully added metadata filtering with categorical spaces!
 
 ## Development Approach
 
@@ -13,20 +13,23 @@ Successfully transitioned from car example to legal document search!
 
 2. **Incremental Development Plan**
    - [x] Replace car schema with basic legal document schema ✅
+   - [x] Add document_type and jurisdiction metadata filtering ✅
    - [ ] Add document ingestion from JSON files
-   - [ ] Implement hierarchical search (jurisdiction, practice areas)
    - [ ] Add temporal/recency scoring
+   - [ ] Implement hierarchical search (jurisdiction, practice areas)
    - [ ] Integrate preprocessing pipelines
    - [ ] Add advanced query patterns
 
 ## Current Implementation
 
-The app implements legal document search with:
-- Schema: `LegalDocument` with id, title, and content fields
-- Two text similarity spaces:
+The app implements advanced legal document search with:
+- Schema: `LegalDocument` with id, title, content, document_type, and jurisdiction fields
+- Multiple similarity spaces:
   - `title_space` - searches document titles
   - `content_space` - searches document content
-- REST API for ingestion and search
+  - `document_type_space` - filters by document type (statute, case, regulation, etc.)
+  - `jurisdiction_space` - filters by jurisdiction (federal, texas, california, etc.)
+- REST API for ingestion and search with categorical filtering
 - Qdrant vector database integration
 
 ## API Endpoints
@@ -44,31 +47,50 @@ curl -X POST http://localhost:8080/api/v1/ingest/legal_document \
   -d '[
     {
       "id": "1",
-      "title": "Document Title",
-      "content": "Full document content..."
+      "title": "Texas Medical Malpractice Act",
+      "content": "Full document content...",
+      "document_type": "statute",
+      "jurisdiction": "texas"
     }
   ]'
 ```
 
-### Search by Content
+### Search by Content and Type
 ```bash
 curl -X POST http://localhost:8080/api/v1/search/search \
   -H "Content-Type: application/json" \
   -d '{
     "content_query": "medical malpractice",
     "title_query": "",
+    "document_type": "case",
+    "jurisdiction": "",
     "limit": 5
   }'
 ```
 
-### Search by Title
+### Filter by Jurisdiction Only
 ```bash
 curl -X POST http://localhost:8080/api/v1/search/search \
   -H "Content-Type: application/json" \
   -d '{
     "content_query": "",
-    "title_query": "Texas",
-    "limit": 3
+    "title_query": "",
+    "document_type": "",
+    "jurisdiction": "texas",
+    "limit": 10
+  }'
+```
+
+### Combined Filtering
+```bash
+curl -X POST http://localhost:8080/api/v1/search/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content_query": "privacy",
+    "title_query": "",
+    "document_type": "regulation",
+    "jurisdiction": "federal",
+    "limit": 5
   }'
 ```
 
