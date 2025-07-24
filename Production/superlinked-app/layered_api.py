@@ -20,7 +20,7 @@ from .chunk_queries import precise_chunk_query
 # Import layered queries
 from .layered_queries import (
     discovery_query, discovery_by_type_query, discovery_by_jurisdiction_query,
-    exploration_query, deep_dive_query, deep_dive_precise_query
+    exploration_query, ai_research_query, deep_dive_query, deep_dive_precise_query
 )
 
 # Create sources
@@ -53,6 +53,12 @@ discovery_by_jurisdiction_query_rest = sl.RestQuery(
 exploration_search_query = sl.RestQuery(
     sl.RestDescriptor("exploration_search"),
     exploration_query
+)
+
+# PHASE 3: AI-Enhanced Research Endpoint
+ai_research_search_query = sl.RestQuery(
+    sl.RestDescriptor("ai_research_search"),
+    ai_research_query
 )
 
 # DEEP DIVE LAYER ENDPOINTS
@@ -89,6 +95,9 @@ executor = sl.RestExecutor(
         
         # Exploration layer queries
         exploration_search_query,
+        
+        # Phase 3: AI-enhanced queries
+        ai_research_search_query,
         
         # Deep dive layer queries
         deep_dive_search_query,

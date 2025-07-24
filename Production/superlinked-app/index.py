@@ -34,9 +34,32 @@ class LegalDocument:
 
 legal_document = LegalDocument()
 
-# Text similarity spaces for legal document search
+# Core text similarity spaces for legal document search
 title_space = sl.TextSimilaritySpace(text=legal_document.title, model="all-MiniLM-L6-v2")
 content_space = sl.TextSimilaritySpace(text=legal_document.content, model="all-MiniLM-L6-v2")
+
+# PHASE 3: AI Preprocessing Spaces
+# High-quality spaces for AI-processed content with better model
+executive_summary_space = sl.TextSimilaritySpace(
+    text=legal_document.executive_summary, 
+    model="sentence-transformers/all-mpnet-base-v2"
+)
+
+key_findings_space = sl.TextSimilaritySpace(
+    text=legal_document.key_findings,
+    model="sentence-transformers/all-mpnet-base-v2"
+)
+
+key_takeaways_space = sl.TextSimilaritySpace(
+    text=legal_document.key_takeaways,
+    model="sentence-transformers/all-mpnet-base-v2"
+)
+
+# Extracted facts space for precise fact retrieval
+extracted_facts_space = sl.TextSimilaritySpace(
+    text=legal_document.extracted_facts,
+    model="sentence-transformers/all-mpnet-base-v2"
+)
 
 # Categorical space for document type filtering
 document_type_space = sl.CategoricalSimilaritySpace(
@@ -54,5 +77,61 @@ jurisdiction_space = sl.CategoricalSimilaritySpace(
     uncategorized_as_category=True  # Treat unknown jurisdictions as "other"
 )
 
-# Create index with current working spaces (will add recency in Phase 3)
-index = sl.Index([title_space, content_space, document_type_space, jurisdiction_space])
+# PHASE 3: Hierarchical Jurisdiction Spaces
+# Fine-grained jurisdiction filtering with state/city hierarchy
+jurisdiction_state_space = sl.CategoricalSimilaritySpace(
+    category_input=legal_document.jurisdiction_state,
+    categories=["texas", "california", "new_york", "florida", "illinois", "other"],
+    negative_filter=-1.0,
+    uncategorized_as_category=True
+)
+
+jurisdiction_city_space = sl.CategoricalSimilaritySpace(
+    category_input=legal_document.jurisdiction_city,
+    categories=["houston", "dallas", "austin", "san_antonio", "los_angeles", "san_francisco", "chicago", "new_york", "other"],
+    negative_filter=-1.0,
+    uncategorized_as_category=True
+)
+
+# Practice Area Hierarchical Spaces
+practice_area_primary_space = sl.CategoricalSimilaritySpace(
+    category_input=legal_document.practice_area_primary,
+    categories=["litigation", "healthcare", "regulatory", "corporate", "criminal", "other"],
+    negative_filter=-1.0,
+    uncategorized_as_category=True
+)
+
+practice_area_secondary_space = sl.CategoricalSimilaritySpace(
+    category_input=legal_document.practice_area_secondary,
+    categories=["medical_malpractice", "personal_injury", "healthcare_compliance", "data_privacy", "general_litigation", "other"],
+    negative_filter=-1.0,
+    uncategorized_as_category=True
+)
+
+# PHASE 3: Content Enhancement Spaces
+# Semantic spaces for legal topics and keywords
+legal_topics_space = sl.TextSimilaritySpace(
+    text=legal_document.legal_topics,
+    model="sentence-transformers/all-mpnet-base-v2"
+)
+
+keywords_space = sl.TextSimilaritySpace(
+    text=legal_document.keywords,
+    model="sentence-transformers/all-mpnet-base-v2"
+)
+
+# Create index with Phase 3 comprehensive spaces
+index = sl.Index([
+    # Core spaces
+    title_space, content_space, document_type_space, jurisdiction_space,
+    
+    # Phase 3: AI Preprocessing Spaces  
+    executive_summary_space, key_findings_space, key_takeaways_space, extracted_facts_space,
+    
+    # Phase 3: Hierarchical Spaces
+    jurisdiction_state_space, jurisdiction_city_space, 
+    practice_area_primary_space, practice_area_secondary_space,
+    
+    # Phase 3: Content Enhancement Spaces for semantic search
+    legal_topics_space, keywords_space
+])
