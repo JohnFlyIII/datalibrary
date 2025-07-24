@@ -29,7 +29,22 @@ class LegalDocument:
     
     # PHASE 2 EXPANSION: Testing new datatypes
     publication_date: sl.Timestamp      # Testing sl.Timestamp datatype ✅
-    confidence_score: sl.Integer         # Testing sl.Integer datatype
+    confidence_score: sl.Integer         # Testing sl.Integer datatype ✅
+    
+    # PHASE 1A: Document Metadata Fields (ready-to-use from existing metadata)
+    source_filename: sl.String           # Original PDF filename
+    file_size_bytes: sl.Integer          # Document file size
+    total_pages: sl.Integer              # Number of pages in document
+    total_chars: sl.Integer              # Total character count
+    fact_count: sl.Integer               # Number of extracted facts
+    
+    # PHASE 1A: Enhanced Content Fields (ready-to-use from existing metadata)
+    summary_bullet_points: sl.String    # Structured bullet point summary
+    summary_conclusion: sl.String       # Final conclusion/takeaway
+    
+    # PHASE 1A: Processing Metadata Fields (ready-to-use from existing metadata)
+    ai_model: sl.String                  # AI model used for processing
+    preprocessing_version: sl.String     # Version of preprocessing pipeline
 
 
 legal_document = LegalDocument()
@@ -120,7 +135,34 @@ keywords_space = sl.TextSimilaritySpace(
     model="sentence-transformers/all-mpnet-base-v2"
 )
 
-# Create index with Phase 3 comprehensive spaces
+# PHASE 1A: Document Metrics Spaces
+# Numerical spaces for document characteristics and quality metrics
+total_pages_space = sl.NumberSpace(
+    number=legal_document.total_pages,
+    min_value=1,
+    max_value=1000,
+    mode=sl.Mode.MAXIMUM  # Prioritize longer documents when relevant
+)
+
+fact_count_space = sl.NumberSpace(
+    number=legal_document.fact_count,
+    min_value=0,
+    max_value=100,
+    mode=sl.Mode.MAXIMUM  # Prioritize documents with more facts
+)
+
+# Enhanced content spaces using the new summary fields
+summary_bullet_points_space = sl.TextSimilaritySpace(
+    text=legal_document.summary_bullet_points,
+    model="sentence-transformers/all-mpnet-base-v2"
+)
+
+summary_conclusion_space = sl.TextSimilaritySpace(
+    text=legal_document.summary_conclusion,
+    model="sentence-transformers/all-mpnet-base-v2"
+)
+
+# Create index with Phase 1A enhanced comprehensive spaces
 index = sl.Index([
     # Core spaces
     title_space, content_space, document_type_space, jurisdiction_space,
@@ -133,5 +175,8 @@ index = sl.Index([
     practice_area_primary_space, practice_area_secondary_space,
     
     # Phase 3: Content Enhancement Spaces for semantic search
-    legal_topics_space, keywords_space
+    legal_topics_space, keywords_space,
+    
+    # Phase 1A: Document Metrics & Enhanced Summary Spaces
+    total_pages_space, fact_count_space, summary_bullet_points_space, summary_conclusion_space
 ])

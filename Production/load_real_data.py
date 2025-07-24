@@ -232,6 +232,21 @@ class SuperlinkedDataLoader:
             # PHASE 2: Testing new datatypes
             'publication_date': self.extract_publication_date(metadata),
             'confidence_score': self.calculate_confidence_score(metadata),
+            
+            # PHASE 1A: Document Metadata Fields (ready-to-use)
+            'source_filename': metadata.get('source_filename', ''),
+            'file_size_bytes': metadata.get('file_size_bytes', 0),
+            'total_pages': metadata.get('total_pages', 0),
+            'total_chars': metadata.get('total_chars', 0),
+            'fact_count': metadata.get('fact_count', 0),
+            
+            # PHASE 1A: Enhanced Content Fields (ready-to-use)
+            'summary_bullet_points': '\n'.join(metadata.get('summary_bullet_points', [])),
+            'summary_conclusion': metadata.get('summary_conclusion', ''),
+            
+            # PHASE 1A: Processing Metadata Fields (ready-to-use)
+            'ai_model': metadata.get('ai_model', ''),
+            'preprocessing_version': metadata.get('preprocessing_version', ''),
         }
         
         return document, metadata
