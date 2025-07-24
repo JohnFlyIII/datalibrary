@@ -38,6 +38,137 @@ class SuperlinkedDataLoader:
         if not jurisdiction_state:
             return 'federal'  # Default assumption
         return jurisdiction_state
+    
+    def extract_city_from_title(self, title: str) -> str:
+        """Extract city name from document title"""
+        title_lower = title.lower()
+        cities = ['houston', 'dallas', 'austin', 'san_antonio', 'los_angeles', 'san_francisco', 'chicago', 'new_york']
+        for city in cities:
+            if city.replace('_', ' ') in title_lower or city in title_lower:
+                return city
+        return ''
+    
+    def infer_primary_practice_area(self, metadata: Dict) -> str:
+        """Infer primary practice area from content"""
+        title = metadata.get('title', '').lower()
+        content_type = metadata.get('content_type', '').lower()
+        
+        if any(term in title for term in ['malpractice', 'injury', 'assault', 'tort', 'liability']):
+            return 'litigation'
+        elif any(term in title for term in ['hospital', 'medical', 'healthcare']):
+            return 'healthcare'
+        elif content_type in ['statute', 'regulation']:
+            return 'regulatory'
+        else:
+            return 'litigation'  # default
+    
+    def infer_secondary_practice_area(self, metadata: Dict) -> str:
+        """Infer secondary practice area from content"""
+        title = metadata.get('title', '').lower()
+        
+        if 'medical' in title and 'malpractice' in title:
+            return 'medical_malpractice'
+        elif any(term in title for term in ['assault', 'abuse', 'survivor']):
+            return 'personal_injury'
+        elif 'hospital' in title:
+            return 'healthcare_compliance'
+        elif 'privacy' in title:
+            return 'data_privacy'
+        else:
+            return 'general_litigation'
+    
+    def extract_legal_topics(self, metadata: Dict) -> str:
+        """Extract legal topics from metadata"""
+        topics = []
+        title = metadata.get('title', '').lower()
+        
+        # Extract key legal concepts
+        if 'malpractice' in title:
+            topics.append('medical malpractice')
+        if 'liability' in title:
+            topics.append('tort liability')
+        if 'hospital' in title:
+            topics.append('hospital law')
+        if 'privacy' in title:
+            topics.append('medical privacy')
+        if 'assault' in title:
+            topics.append('sexual assault')
+        if 'statistics' in title:
+            topics.append('legal statistics')
+            
+        return ', '.join(topics) if topics else 'general legal'
+    
+    def extract_keywords(self, metadata: Dict) -> str:
+        """Extract search keywords from metadata"""
+        keywords = []
+        title = metadata.get('title', '').lower()
+        
+        # Add key terms for search
+        key_terms = ['texas', 'medical', 'malpractice', 'hospital', 'liability', 'assault', 'privacy', 'statistics', 'houston']
+        for term in key_terms:
+            if term in title:
+                keywords.append(term)
+                
+        return ', '.join(keywords) if keywords else 'legal document'
+    
+    def extract_publication_date(self, metadata: Dict) -> int:
+        """Extract publication date as Unix timestamp"""
+        from datetime import datetime
+        
+        # Try to get processed_date from metadata
+        if metadata.get('processed_date'):
+            try:
+                # Parse ISO format date
+                dt = datetime.fromisoformat(metadata['processed_date'].replace('Z', '+00:00'))
+                return int(dt.timestamp())
+            except:
+                pass
+        
+        # Try to infer from filename or content
+        title = metadata.get('title', '').lower()
+        
+        # Look for year in title
+        import re
+        year_match = re.search(r'20(\d{2})', title)
+        if year_match:
+            try:
+                year = int('20' + year_match.group(1))
+                # Create date for January 1st of that year
+                dt = datetime(year, 1, 1)
+                return int(dt.timestamp())
+            except:
+                pass
+        
+        # Default to current processing time
+        return int(datetime.now().timestamp())
+    
+    def calculate_confidence_score(self, metadata: Dict) -> int:
+        """Calculate overall confidence score (0-100) based on data quality"""
+        score = 0
+        
+        # Base score for having metadata
+        score += 20
+        
+        # Add points for AI-processed content
+        if metadata.get('executive_summary'):
+            score += 15
+        if metadata.get('key_findings'):
+            score += 15
+        if metadata.get('extracted_facts'):
+            score += 20
+            
+        # Add points for data richness
+        if metadata.get('fact_count', 0) > 5:
+            score += 10
+        if metadata.get('total_pages', 0) > 2:
+            score += 10
+            
+        # Add points for clear content type classification
+        if metadata.get('content_type') in ['statute', 'case_law', 'regulation']:
+            score += 10
+            
+        # Ensure score is within 0-100 range
+        return min(100, max(0, score))
         
     def build_rich_content(self, metadata: Dict) -> str:
         """Build rich content from AI-processed fields"""
@@ -73,13 +204,34 @@ class SuperlinkedDataLoader:
         with open(metadata_file, 'r') as f:
             metadata = json.load(f)
             
-        # Map to our schema
+        # Map to our schema (PHASE 1: Expanded with new fields)
         document = {
+            # Core fields
             'id': metadata['id'],
             'title': metadata['title'],
             'content': self.build_rich_content(metadata),
             'document_type': self.map_content_type(metadata.get('content_type', 'unknown')),
-            'jurisdiction': self.map_jurisdiction(metadata.get('jurisdiction_state'))
+            'jurisdiction': self.map_jurisdiction(metadata.get('jurisdiction_state')),
+            
+            # PHASE 1: AI Preprocessing Fields
+            'extracted_facts': json.dumps(metadata.get('extracted_facts', [])),
+            'executive_summary': metadata.get('executive_summary', ''),
+            'key_findings': '. '.join(metadata.get('key_findings', [])),
+            'key_takeaways': '. '.join(metadata.get('key_takeaways', [])),
+            
+            # PHASE 1: Hierarchical Fields
+            'jurisdiction_state': metadata.get('jurisdiction_state', ''),
+            'jurisdiction_city': self.extract_city_from_title(metadata.get('title', '')),
+            'practice_area_primary': self.infer_primary_practice_area(metadata),
+            'practice_area_secondary': self.infer_secondary_practice_area(metadata),
+            
+            # PHASE 1: Content Enhancement
+            'legal_topics': self.extract_legal_topics(metadata),
+            'keywords': self.extract_keywords(metadata),
+            
+            # PHASE 2: Testing new datatypes
+            'publication_date': self.extract_publication_date(metadata),
+            'confidence_score': self.calculate_confidence_score(metadata),
         }
         
         return document, metadata

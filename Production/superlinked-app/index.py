@@ -3,12 +3,33 @@ from superlinked import framework as sl
 
 @sl.schema
 class LegalDocument:
+    # Core fields (proven working)
     id: sl.IdField
     title: sl.String
     content: sl.String
     document_type: sl.String  # statute, case, regulation, etc.
     jurisdiction: sl.String  # federal, texas, california, etc.
-    # publication_date: sl.Timestamp  # Will add in Phase 3
+    
+    # PHASE 1 EXPANSION: AI Preprocessing Fields (using proven sl.String)
+    # These fields are populated from our existing processed metadata
+    extracted_facts: sl.String       # JSON array of facts with citations
+    executive_summary: sl.String     # One-page executive summary  
+    key_findings: sl.String          # Most important facts/findings
+    key_takeaways: sl.String         # Plain-language explanations
+    
+    # PHASE 1 EXPANSION: Hierarchical Fields (using proven sl.String)
+    jurisdiction_state: sl.String    # texas, california, etc.
+    jurisdiction_city: sl.String     # houston, los_angeles, etc.
+    practice_area_primary: sl.String # litigation, corporate, etc.
+    practice_area_secondary: sl.String # personal_injury, medical_malpractice, etc.
+    
+    # PHASE 1 EXPANSION: Content Enhancement (using proven sl.String)  
+    legal_topics: sl.String          # Specific legal concepts
+    keywords: sl.String              # Important search terms
+    
+    # PHASE 2 EXPANSION: Testing new datatypes
+    publication_date: sl.Timestamp      # Testing sl.Timestamp datatype ✅
+    confidence_score: sl.Integer         # Testing sl.Integer datatype
 
 
 legal_document = LegalDocument()
