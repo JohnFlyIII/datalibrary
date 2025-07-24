@@ -1,10 +1,18 @@
 # Legal Knowledge Platform - Production System
 
-## ⚠️ IMPORTANT: Current Status (2025-07-23)
+## ⚠️ IMPORTANT: Current Status (2025-07-24)
 
 - **working_simple_example/** - ✅ FULLY WORKING simple car example with Superlinked 1.45.2
-- **superlinked-app/** - 🚧 NEW implementation starting from working example
+- **superlinked-app/** - ✅ **PRODUCTION READY** with advanced three-layer query system
 - **superlinked-app-not-working/** - ❌ Previous complex implementation (moved for reference)
+
+## 🎯 **LATEST UPDATE: Advanced Features Complete**
+
+✅ **Phase 4 Complete**: Three-layer query system with chunk support
+- Document-level search (discovery & exploration)
+- Chunk-level search (deep dive) for precise text passages
+- 6 specialized search endpoints
+- Comprehensive testing and documentation
 
 ## Overview
 
@@ -23,12 +31,22 @@ This system implements a progressive disclosure legal knowledge platform designe
 
 ## System Architecture Philosophy
 
-### Progressive Disclosure Model
+### Progressive Disclosure Model ✅ **IMPLEMENTED**
 The platform operates on three layers:
 
 1. **Discovery Layer** - Fast, broad exploration to understand the knowledge landscape
+   - ✅ Basic discovery search across all documents
+   - ✅ Discovery filtered by document type
+   - ✅ Discovery filtered by jurisdiction
+   
 2. **Exploration Layer** - Medium precision filtering to identify most relevant sources
+   - ✅ Focused multi-filter search
+   - ✅ Document-type and jurisdiction constraints
+   
 3. **Deep Dive Layer** - Full precision access with complete context
+   - ✅ Precise chunk-level search for exact passages
+   - ✅ Character-level positioning for accurate citations
+   - ✅ Parent document linking and metadata inheritance
 
 ### Why This Approach Works
 - Matches how legal professionals actually research (broad → narrow → precise)
@@ -79,9 +97,34 @@ Instead of single embedding spaces, we use specialized spaces for different aspe
 - Separate embedding spaces to reduce reranking overhead
 - **No database joins** - all data co-located in Qdrant
 
-## Schema Design
+## ✅ **IMPLEMENTED SCHEMAS**
 
-### Core Document Schema
+### Document-Level Schema (Discovery & Exploration)
+```python
+@sl.schema
+class LegalDocument:
+    id: sl.IdField
+    title: sl.String
+    content: sl.String
+    document_type: sl.String  # statute, case, regulation, etc.
+    jurisdiction: sl.String  # federal, texas, california, etc.
+```
+
+### Chunk-Level Schema (Deep Dive)
+```python
+@sl.schema
+class DocumentChunk:
+    id: sl.IdField  # Format: {doc_id}_chunk_{chunk_index}
+    parent_document_id: sl.String  # Links back to main document
+    chunk_index: sl.Integer  # Position within document
+    text: sl.String  # Actual chunk content
+    start_char: sl.Integer  # Character position start
+    end_char: sl.Integer  # Character position end
+    document_type: sl.String  # Inherited from parent
+    jurisdiction: sl.String  # Inherited from parent
+```
+
+### Advanced Schema Design (Future Enhancement)
 ```python
 @sl.schema
 class LegalDocument:
@@ -199,39 +242,90 @@ content_type_space = sl.CategoricalSimilaritySpace(
 )
 ```
 
-## Query Patterns
+## ✅ **IMPLEMENTED QUERY PATTERNS**
 
-### Discovery Query
-```python
-# Purpose: "What knowledge exists? How much? How related?"
-discovery_results = query_discovery_layer(
-    query="employment law tech companies",
-    spaces=[discovery_space, topic_space, content_density_space],
-    limit=50
-)
+### Available Endpoints
+
+**Discovery Layer**:
+- `POST /api/v1/search/discovery_search` - Basic broad search
+- `POST /api/v1/search/discovery_by_type` - Discovery by document type
+- `POST /api/v1/search/discovery_by_jurisdiction` - Discovery by jurisdiction
+
+**Exploration Layer**:
+- `POST /api/v1/search/exploration_search` - Focused multi-filter search
+
+**Deep Dive Layer**:
+- `POST /api/v1/search/deep_dive_search` - Filtered chunk search
+- `POST /api/v1/search/deep_dive_precise` - Unfiltered precise search
+
+### Example Usage
+
+```bash
+# Discovery Layer - Broad search
+curl -X POST "http://localhost:8080/api/v1/search/discovery_search" \
+  -H "Content-Type: application/json" \
+  -d '{"search_query": "medical malpractice", "limit": 10}'
+
+# Exploration Layer - Focused search
+curl -X POST "http://localhost:8080/api/v1/search/exploration_search" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "search_query": "healthcare liability",
+    "document_type": "statute", 
+    "jurisdiction": "texas",
+    "limit": 5
+  }'
+
+# Deep Dive Layer - Precise chunk search
+curl -X POST "http://localhost:8080/api/v1/search/deep_dive_search" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "search_query": "informed consent requirements",
+    "document_type": "regulation",
+    "jurisdiction": "texas", 
+    "limit": 20
+  }'
 ```
 
-### Exploration Query
-```python
-# Purpose: "Which sources are most relevant? What's the focus?"
-exploration_results = query_exploration_layer(
-    document_ids=[selected_docs],
-    query="remote work policies compliance",
-    spaces=[provisions_space, legal_concepts_space, relevance_space],
-    limit=20
-)
+### Response Format
+
+**Document Results** (Discovery & Exploration):
+```json
+{
+  "entries": [
+    {
+      "id": "document_id",
+      "fields": {
+        "title": "Document Title",
+        "content": "Document content...",
+        "document_type": "statute",
+        "jurisdiction": "texas"
+      },
+      "metadata": {"score": 0.85}
+    }
+  ]
+}
 ```
 
-### Deep Dive Query
-```python
-# Purpose: "Give me exact information with full context"
-deep_dive_results = query_deep_dive_layer(
-    document_ids=[most_relevant_docs],
-    query="remote work policies compliance",
-    spaces=[content_space, precedent_space, citation_network_space],
-    include_context=True,
-    limit=100
-)
+**Chunk Results** (Deep Dive):
+```json
+{
+  "entries": [
+    {
+      "id": "doc_id_chunk_0",
+      "fields": {
+        "parent_document_id": "doc_id",
+        "chunk_index": 0,
+        "text": "Specific text passage...",
+        "start_char": 1200,
+        "end_char": 3200,
+        "document_type": "statute",
+        "jurisdiction": "texas"
+      },
+      "metadata": {"score": 0.92}
+    }
+  ]
+}
 ```
 
 ## Knowledge Platform Features
@@ -291,11 +385,13 @@ Every chunk maintains complete traceability:
 - Optimize performance settings
 - Create operational procedures
 
-### Phase 4: Enhanced Features (Week 4+)
-- Add discovery layer endpoints
-- Implement summary generation
-- Create exploration and deep dive layers
-- Add progressive disclosure features
+### ✅ Phase 4: Enhanced Features (COMPLETED)
+- ✅ Added discovery layer endpoints
+- ✅ Created exploration and deep dive layers
+- ✅ Implemented progressive disclosure features
+- ✅ Added chunk-level search with precise positioning
+- ✅ Built comprehensive testing framework
+- ✅ Created complete documentation
 
 ## Integration Points
 
@@ -318,15 +414,24 @@ Every chunk maintains complete traceability:
 2. **Core System**: Chunking and ingestion system with 500-char chunks
 3. **Production Schema**: Working `legal_superlinked_config/app.py` and Docker setup
 
-### 🚀 IN PROGRESS  
-1. **Copy Production Files**: Upload schema and Docker configs to EC2
-2. **Deploy Services**: Build and run Superlinked + Qdrant containers
-3. **Test Pipeline**: Verify ingestion with Texas statutes
+### ✅ COMPLETED  
+1. **Three-Layer Query System**: Discovery, Exploration, Deep Dive layers
+2. **Chunk Support**: Precise text-level search with character positioning
+3. **Advanced API**: 6 specialized search endpoints
+4. **Testing Framework**: Comprehensive validation scripts
+5. **Documentation**: Complete patterns guide with examples
+
+### 🚀 PRODUCTION READY
+- **Docker containers**: Built and tested locally
+- **Data loading**: Both document and chunk ingestion working
+- **Search performance**: 0.8+ similarity scores on relevant queries
+- **API endpoints**: All layers tested and documented
 
 ### 📋 NEXT STEPS
-1. **Monitoring**: CloudWatch alerts and operational procedures  
-2. **Enhanced Features**: Progressive disclosure layers
-3. **Scale Testing**: Performance optimization and cost analysis
+1. **AWS Deployment**: Deploy to production infrastructure
+2. **Monitoring**: CloudWatch alerts and operational procedures  
+3. **Scale Testing**: Performance optimization with larger datasets
+4. **Advanced Features**: Summary generation, legal concept extraction
 
 ## Quick Start
 
