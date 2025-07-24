@@ -25,10 +25,26 @@ load_dotenv('.env.local')
 
 # Initialize models
 embedding_model = SentenceTransformer(os.getenv('EMBEDDING_MODEL', 'sentence-transformers/all-mpnet-base-v2'))
-anthropic_client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
 
-# Model configuration
-CLAUDE_MODEL = os.getenv('CLAUDE_MODEL', 'claude-3-sonnet-20240229')  # or claude-3-opus-20240229 for best quality
+# Initialize Anthropic client for latest version (0.59.0)
+api_key = os.getenv('ANTHROPIC_API_KEY')
+if not api_key:
+    raise ValueError("ANTHROPIC_API_KEY environment variable is required")
+
+# Create client with minimal parameters to avoid proxy issues
+try:
+    anthropic_client = Anthropic(api_key=api_key)
+except Exception as e:
+    print(f"Error initializing Anthropic client: {e}")
+    print("Trying alternative initialization...")
+    # Clear any problematic environment variables
+    for var in ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy']:
+        if var in os.environ:
+            del os.environ[var]
+    anthropic_client = Anthropic(api_key=api_key)
+
+# Model configuration - Updated for latest Anthropic models
+CLAUDE_MODEL = os.getenv('CLAUDE_MODEL', 'claude-opus-4-20250514')  # Latest Opus model
 
 class DocumentProcessor:
     """Process legal documents locally using Claude"""
