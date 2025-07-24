@@ -169,6 +169,192 @@ class SuperlinkedDataLoader:
             
         # Ensure score is within 0-100 range
         return min(100, max(0, score))
+    
+    def extract_compliance_requirements(self, metadata: Dict) -> str:
+        """Extract compliance and regulatory requirements from document content"""
+        requirements = []
+        
+        # Check key findings for regulatory requirements
+        key_findings = metadata.get('key_findings', [])
+        for finding in key_findings:
+            if any(term in finding.lower() for term in ['requirement', 'must', 'shall', 'mandatory', 'compliance', 'regulation']):
+                requirements.append(finding)
+        
+        # Check executive summary for requirements
+        summary = metadata.get('executive_summary', '').lower()
+        if 'oversight' in summary and 'requirement' in summary:
+            requirements.append("Healthcare providers subject to regulatory oversight and reporting requirements")
+        
+        # Check for specific regulatory terms
+        title = metadata.get('title', '').lower()
+        if 'medical' in title and ('malpractice' in title or 'regulation' in title):
+            requirements.append("Medical malpractice reporting and compliance with healthcare regulations")
+        
+        return '. '.join(requirements) if requirements else ''
+    
+    def extract_deadlines_timeframes(self, metadata: Dict) -> str:
+        """Extract time-sensitive information and deadlines from document content"""
+        timeframes = []
+        
+        # Look for time periods in key findings and takeaways
+        all_text = []
+        all_text.extend(metadata.get('key_findings', []))
+        all_text.extend(metadata.get('key_takeaways', []))
+        all_text.append(metadata.get('executive_summary', ''))
+        
+        # Extract year ranges and time periods
+        import re
+        for text in all_text:
+            if not text:
+                continue
+            # Look for year ranges
+            year_ranges = re.findall(r'\b(19|20)\d{2}-\d{4}\b', text)
+            for year_range in year_ranges:
+                timeframes.append(f"Data period: {year_range}")
+            
+            # Look for specific timeframes mentioned
+            if 'annual' in text.lower():
+                timeframes.append("Annual reporting requirements")
+            if 'peak' in text.lower() and re.search(r'\b20\d{2}\b', text):
+                peak_years = re.findall(r'\b20\d{2}\b', text)
+                if peak_years:
+                    timeframes.append(f"Peak activity period: {peak_years[0]}")
+        
+        return '. '.join(set(timeframes)) if timeframes else ''
+    
+    def extract_penalties_consequences(self, metadata: Dict) -> str:
+        """Extract penalties, consequences, and enforcement actions from document content"""
+        penalties = []
+        
+        # Look for financial consequences
+        all_text = []
+        all_text.extend(metadata.get('key_findings', []))
+        all_text.extend(metadata.get('key_takeaways', []))
+        all_text.append(metadata.get('executive_summary', ''))
+        
+        for text in all_text:
+            if not text:
+                continue
+            text_lower = text.lower()
+            
+            # Look for financial penalties
+            if 'billion' in text_lower and 'payout' in text_lower:
+                import re
+                amounts = re.findall(r'\$[\d,]+\.?\d*\s*billion', text)
+                for amount in amounts:
+                    penalties.append(f"Financial liability: {amount} in total payouts")
+            
+            # Look for administrative actions
+            if 'adverse action' in text_lower and 'report' in text_lower:
+                penalties.append("Administrative adverse actions against healthcare providers")
+            
+            # Look for license impacts
+            if 'license' in text_lower and ('affect' in text_lower or 'privilege' in text_lower):
+                penalties.append("Potential impact on professional licenses and practice privileges")
+            
+            # Look for oversight consequences
+            if 'oversight' in text_lower and ('accountability' in text_lower or 'quality' in text_lower):
+                penalties.append("Enhanced regulatory oversight and accountability measures")
+        
+        return '. '.join(set(penalties)) if penalties else ''
+    
+    def extract_parties_affected(self, metadata: Dict) -> str:
+        """Extract information about parties affected by the regulations or legal content"""
+        parties = []
+        
+        # Look for affected parties in content
+        all_text = []
+        all_text.extend(metadata.get('key_findings', []))
+        all_text.extend(metadata.get('key_takeaways', []))
+        all_text.append(metadata.get('executive_summary', ''))
+        
+        for text in all_text:
+            if not text:
+                continue
+            text_lower = text.lower()
+            
+            # Healthcare providers
+            if 'healthcare provider' in text_lower or 'medical provider' in text_lower:
+                parties.append("Healthcare providers and medical practitioners")
+            
+            # Patients
+            if 'patient' in text_lower and ('harm' in text_lower or 'error' in text_lower):
+                parties.append("Patients and healthcare consumers")
+            
+            # Hospitals
+            if 'hospital' in text_lower:
+                parties.append("Hospitals and healthcare facilities")
+            
+            # Government/regulatory
+            if 'policymaker' in text_lower or 'regulator' in text_lower:
+                parties.append("Policymakers and regulatory agencies")
+            
+            # Organizations
+            if 'organization' in text_lower and 'healthcare' in text_lower:
+                parties.append("Healthcare organizations and systems")
+        
+        # Infer from document type and title
+        title = metadata.get('title', '').lower()
+        if 'texas' in title and 'medical' in title:
+            parties.append("Texas healthcare industry stakeholders")
+        
+        return '. '.join(set(parties)) if parties else ''
+    
+    def extract_fact_locations(self, metadata: Dict) -> str:
+        """Extract location references for facts from metadata"""
+        locations = []
+        
+        # Get fact locations from extracted facts
+        extracted_facts = metadata.get('extracted_facts', [])
+        for fact in extracted_facts:
+            if isinstance(fact, dict) and 'location' in fact:
+                locations.append(fact['location'])
+        
+        return '. '.join(set(locations)) if locations else ''
+    
+    def extract_key_provisions(self, metadata: Dict) -> str:
+        """Extract key legal provisions and requirements"""
+        provisions = []
+        
+        # Use key findings as provisions
+        key_findings = metadata.get('key_findings', [])
+        for finding in key_findings[:3]:  # Take top 3 findings as key provisions
+            provisions.append(finding)
+        
+        return '. '.join(provisions) if provisions else ''
+    
+    def extract_practical_implications(self, metadata: Dict) -> str:
+        """Extract practical real-world implications"""
+        implications = []
+        
+        # Use key takeaways as practical implications
+        key_takeaways = metadata.get('key_takeaways', [])
+        for takeaway in key_takeaways:
+            implications.append(takeaway)
+        
+        return '. '.join(implications) if implications else ''
+    
+    def build_practice_areas_list(self, metadata: Dict) -> str:
+        """Build comma-separated list of practice areas"""
+        areas = []
+        
+        # Get inferred practice areas
+        primary = self.infer_primary_practice_area(metadata)
+        secondary = self.infer_secondary_practice_area(metadata)
+        
+        if primary:
+            areas.append(primary)
+        if secondary and secondary != primary:
+            areas.append(secondary)
+            
+        # Add specific area based on content
+        title = metadata.get('title', '').lower()
+        if 'medical' in title and 'malpractice' in title:
+            areas.append('medical_malpractice')
+        if 'healthcare' in title:
+            areas.append('healthcare_law')
+        
+        return ','.join(set(areas)) if areas else ''
         
     def build_rich_content(self, metadata: Dict) -> str:
         """Build rich content from AI-processed fields"""
@@ -247,6 +433,97 @@ class SuperlinkedDataLoader:
             # PHASE 1A: Processing Metadata Fields (ready-to-use)
             'ai_model': metadata.get('ai_model', ''),
             'preprocessing_version': metadata.get('preprocessing_version', ''),
+            
+            # COMPREHENSIVE SCHEMA: Default values for all additional fields
+            # (Will be populated in future phases)
+            
+            # Additional Preprocessing Fields (PHASE 1B: Enhanced extraction)
+            'fact_locations': self.extract_fact_locations(metadata),
+            'key_provisions': self.extract_key_provisions(metadata),
+            'practical_implications': self.extract_practical_implications(metadata),
+            'summary': metadata.get('executive_summary', ''),  # Use executive summary as general summary
+            'practice_areas': self.build_practice_areas_list(metadata),
+            
+            # Additional Hierarchical Fields
+            'jurisdiction_country': metadata.get('jurisdiction_country', 'united_states'),
+            'jurisdiction_full_path': '',
+            'practice_area_specific': '',
+            'practice_area_full_path': '',
+            
+            # Document Hierarchy & Chunking
+            'parent_document_id': '',
+            'chunk_index': 0,
+            'start_char': 0,
+            'end_char': 0,
+            'chunk_context': '',
+            'is_chunk': 'false',
+            
+            # Legal Classification
+            'authority_level': '',
+            'content_type': metadata.get('content_type', ''),
+            
+            # Enhanced Citation Fields
+            'citations_apa7': '',
+            'internal_citations': '',
+            'external_citations': '',
+            
+            # Additional Temporal Information
+            'effective_date': 0,
+            'last_updated': 0,
+            
+            # Source & Access Information
+            'source_url': '',
+            'pdf_path': '',
+            'citation_format': '',
+            
+            # Progressive Disclosure Layers - Discovery
+            'broad_topics': '',
+            'content_density': 0,
+            'coverage_scope': '',
+            
+            # Progressive Disclosure Layers - Exploration
+            'legal_concepts': '',
+            'client_relevance_score': 0,
+            'complexity_level': '',
+            
+            # Progressive Disclosure Layers - Deep Dive
+            'case_precedents': '',
+            'citation_context': '',
+            'legislative_history': '',
+            
+            # Relationship Fields
+            'cites_documents': '',
+            'cited_by_documents': '',
+            'related_documents': '',
+            'superseded_by': '',
+            
+            # Content Strategy Fields
+            'target_audience': '',
+            'readability_score': 0,
+            'common_questions': '',
+            
+            # Legal Practice Fields (PHASE 1B: Enhanced extraction)
+            'compliance_requirements': self.extract_compliance_requirements(metadata),
+            'deadlines_timeframes': self.extract_deadlines_timeframes(metadata),
+            'parties_affected': self.extract_parties_affected(metadata),
+            'penalties_consequences': self.extract_penalties_consequences(metadata),
+            'exceptions_exclusions': '',
+            
+            # Search Enhancement Fields
+            'synonyms': '',
+            'acronyms_abbreviations': '',
+            'search_weight': 1.0,
+            
+            # Quality & Validation Fields
+            'human_reviewed': 'false',
+            'last_verified': 0,
+            'notes_comments': '',
+            
+            # Usage Analytics Fields
+            'access_frequency': 0,
+            'user_ratings': '',
+            'search_performance': 0,
+            'update_priority': 'medium',
         }
         
         return document, metadata
