@@ -28,48 +28,7 @@ discovery_query = (
     .similar(content_space.text, sl.Param("search_query"), weight=1.0)
     .similar(executive_summary_space.text, sl.Param("search_query"), weight=2.0)  # Higher weight for summaries
     .similar(key_takeaways_space.text, sl.Param("search_query"), weight=1.5)     # Medium weight for takeaways
-    .select(
-        # Core fields
-        legal_document.id,
-        legal_document.title,
-        legal_document.content,
-        legal_document.document_type,
-        legal_document.jurisdiction,
-        
-        # AI-processed fields
-        legal_document.executive_summary,
-        legal_document.key_findings,
-        legal_document.key_takeaways,
-        legal_document.extracted_facts,
-        
-        # Hierarchical fields
-        legal_document.jurisdiction_state,
-        legal_document.jurisdiction_city,
-        legal_document.practice_area_primary,
-        legal_document.practice_area_secondary,
-        
-        # Enhanced content fields
-        legal_document.legal_topics,
-        legal_document.keywords,
-        legal_document.confidence_score,
-        legal_document.readability_score,
-        
-        # Enhanced legal fields (newly added)
-        legal_document.penalties_monetary,
-        legal_document.penalties_criminal,
-        legal_document.complexity_score,
-        legal_document.temporal_richness_score,
-        legal_document.authority_level,
-        legal_document.common_terms,
-        legal_document.requirements_mandatory,
-        legal_document.specialties_medical,
-        legal_document.deadlines_specific,
-        legal_document.enhancement_timestamp,
-        legal_document.enhancement_version,
-        
-        # Temporal fields
-        legal_document.published_date,
-    )
+    .select_all()
     .limit(sl.Param("limit", default=10))
 )
 

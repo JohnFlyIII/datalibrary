@@ -551,7 +551,7 @@ class SuperlinkedDataLoader:
         url = f"{self.base_url}/api/v1/ingest/legal_document"
         
         try:
-            response = requests.post(url, json=[document], timeout=30)
+            response = requests.post(url, json=[document], timeout=120)  # Increased timeout for enhanced schema
             return response.status_code == 202
         except Exception as e:
             print(f"Error ingesting {document['id']}: {e}")

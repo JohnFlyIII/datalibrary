@@ -102,7 +102,7 @@ class LegalDocument:
     file_size_bytes: sl.Integer             # Document file size
     total_pages: sl.Integer                 # Number of pages in document
     total_chars: sl.Integer                 # Total character count
-    confidence_score: sl.Integer            # AI confidence in analysis (0-100)
+    confidence_score: sl.Float              # AI confidence in analysis (0-100) - FIXED: was Integer
     
     # ===== RELATIONSHIP FIELDS =====
     cites_documents: sl.String              # Documents this one cites
@@ -112,7 +112,7 @@ class LegalDocument:
     
     # ===== CONTENT STRATEGY FIELDS =====
     target_audience: sl.String              # practitioners, business_owners, clients
-    readability_score: sl.Integer           # Reading difficulty (0-100)
+    readability_score: sl.Float             # Reading difficulty (0-100) - FIXED: was Integer
     common_questions: sl.String             # FAQ-style information
     
     # ===== LEGAL PRACTICE FIELDS =====
@@ -126,7 +126,7 @@ class LegalDocument:
     keywords: sl.String                     # Important search terms
     synonyms: sl.String                     # Alternative terminology
     acronyms_abbreviations: sl.String       # Legal shorthand and acronyms
-    search_weight: sl.Integer               # Boost factor for search (0-10)
+    search_weight: sl.Float                 # Boost factor for search (0-10) - FIXED: was Integer
     
     # ===== QUALITY & VALIDATION FIELDS =====
     human_reviewed: sl.String               # "true" if expert-validated
@@ -144,9 +144,9 @@ class LegalDocument:
     # ===== ENHANCED LEGAL FIELDS (from enhanced_preprocessing.py) =====
     penalties_monetary: sl.String           # Monetary penalties extracted from content
     penalties_criminal: sl.String           # Criminal penalties extracted from content
-    complexity_score: sl.Integer            # Document complexity score (0-100)
-    temporal_richness_score: sl.Integer     # Temporal information richness (0-100)
-    citation_density: sl.Integer            # Citation density score
+    complexity_score: sl.Float              # Document complexity score (0-100) - FIXED: was Integer
+    temporal_richness_score: sl.Float       # Temporal information richness (0-100) - FIXED: was Integer
+    citation_density: sl.Float              # Citation density score - FIXED: was Integer
     common_terms: sl.String                 # Common legal terms found in document
     requirements_mandatory: sl.String       # Mandatory requirements extracted
     specialties_medical: sl.String          # Medical specialties mentioned
