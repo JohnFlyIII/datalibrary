@@ -459,7 +459,7 @@ class SuperlinkedDataLoader:
             'is_chunk': 'false',
             
             # Legal Classification
-            'authority_level': '',
+            'authority_level': metadata.get('authority_level', ''),
             'content_type': metadata.get('content_type', ''),
             
             # Enhanced Citation Fields
@@ -499,7 +499,7 @@ class SuperlinkedDataLoader:
             
             # Content Strategy Fields
             'target_audience': '',
-            'readability_score': 0,
+            'readability_score': metadata.get('readability_score', 0),
             'common_questions': '',
             
             # Legal Practice Fields (PHASE 1B: Enhanced extraction)
@@ -510,9 +510,27 @@ class SuperlinkedDataLoader:
             'exceptions_exclusions': '',
             
             # Search Enhancement Fields
-            'synonyms': '',
+            'synonyms': metadata.get('synonyms', ''),
             'acronyms_abbreviations': '',
             'search_weight': 1.0,
+            
+            # Enhanced Legal Fields (from enhanced_preprocessing.py)
+            'penalties_monetary': metadata.get('penalties_monetary', ''),
+            'penalties_criminal': metadata.get('penalties_criminal', ''),
+            'complexity_score': metadata.get('complexity_score', 0),
+            'temporal_richness_score': metadata.get('temporal_richness_score', 0),
+            'citation_density': metadata.get('citation_density', 0),
+            'common_terms': metadata.get('common_terms', ''),
+            'requirements_mandatory': metadata.get('requirements_mandatory', ''),
+            'specialties_medical': metadata.get('specialties_medical', ''),
+            'deadlines_specific': metadata.get('deadlines_specific', ''),
+            'supersedes': metadata.get('supersedes', ''),
+            'abbreviations': metadata.get('abbreviations', ''),
+            
+            # Enhancement Metadata
+            'enhancement_timestamp': metadata.get('enhancement_timestamp', ''),
+            'enhancement_version': metadata.get('enhancement_version', ''),
+            'enhanced_field_count': metadata.get('enhanced_field_count', 0),
             
             # Quality & Validation Fields
             'human_reviewed': 'false',

@@ -140,6 +140,24 @@ class LegalDocument:
     user_ratings: sl.String                 # User feedback scores
     search_performance: sl.Integer          # Search result effectiveness
     update_priority: sl.String              # high, medium, low
+    
+    # ===== ENHANCED LEGAL FIELDS (from enhanced_preprocessing.py) =====
+    penalties_monetary: sl.String           # Monetary penalties extracted from content
+    penalties_criminal: sl.String           # Criminal penalties extracted from content
+    complexity_score: sl.Integer            # Document complexity score (0-100)
+    temporal_richness_score: sl.Integer     # Temporal information richness (0-100)
+    citation_density: sl.Integer            # Citation density score
+    common_terms: sl.String                 # Common legal terms found in document
+    requirements_mandatory: sl.String       # Mandatory requirements extracted
+    specialties_medical: sl.String          # Medical specialties mentioned
+    deadlines_specific: sl.String           # Specific deadlines and timeframes
+    supersedes: sl.String                   # Documents this supersedes
+    abbreviations: sl.String                # Abbreviations found in document
+    
+    # Enhancement Metadata
+    enhancement_timestamp: sl.String        # When enhancement processing occurred
+    enhancement_version: sl.String          # Version of enhancement processor
+    enhanced_field_count: sl.Integer        # Number of enhanced fields populated
 
 
 legal_document = LegalDocument()
